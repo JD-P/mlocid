@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Cards - mlocid</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="/static/mathjax/es5/tex-mml-chtml.js"></script>
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+            }
+        };
+    </script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><a href="/">mlocid</a></h1>
+            <nav>
+                <a href="/cards">My Cards</a>
+                <a href="/study">Study</a>
+                <a href="#" id="logout">Logout</a>
+            </nav>
+        </header>
+        <main>
+            <div class="cards-header">
+                <h2>My Flashcards</h2>
+                <div class="actions">
+                    <button id="newCardBtn">New Card</button>
+                    <button id="importBtn">Import Mnemosyne</button>
+                </div>
+            </div>
+            
+            <div id="cardModal" class="modal">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <h3 id="modalTitle">New Card</h3>
+                    <form id="cardForm">
+                        <div class="form-group">
+                            <label for="question">Question:</label>
+                            <textarea id="question" name="question" rows="4" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="answer">Answer:</label>
+                            <textarea id="answer" name="answer" rows="4" required></textarea>
+                        </div>
+                        <button type="submit" id="saveCardBtn">Save</button>
+                        <button type="button" id="cancelCardBtn">Cancel</button>
+                    </form>
+                </div>
+            </div>
+            
+            <div id="importModal" class="modal">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <h3>Import Mnemosyne Format</h3>
+                    <p>Paste your cards here. Each line should contain a question and answer separated by a tab character.</p>
+                    <form id="importForm">
+                        <div class="form-group">
+                            <textarea id="importText" name="importText" rows="10" placeholder="Question 1&#9;Answer 1&#10;Question 2&#9;Answer 2"></textarea>
+                        </div>
+                        <button type="submit">Import</button>
+                        <button type="button" id="cancelImportBtn">Cancel</button>
+                    </form>
+                </div>
+            </div>
+            
+            <div id="cardsList" class="cards-list"></div>
+        </main>
+    </div>
+    <script src="/static/app.js"></script>
+    <script src="/static/cards.js"></script>
+</body>
+</html>

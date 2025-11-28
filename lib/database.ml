@@ -60,13 +60,18 @@ let init_db (module Db : DB.CONNECTION) =
   Lwt.return_unit
 
 let create_user (module Db : DB.CONNECTION) username password_hash =
+  let* () = DB.exec (module Db)
+    (exec
+       ~oneshot:true
+       "INSERT INTO users (username, password_hash) VALUES (?, ?)"
+       (tup2 string string))
+    (username, password_hash) in
   let+ id = DB.find (module Db)
     (find_opt
        ~oneshot:true
        int64
-       "INSERT INTO users (username, password_hash) VALUES (?, ?) RETURNING id"
-       tup2 string string)
-    (username, password_hash) in
+       "SELECT last_insert_rowid()")
+    unit in
   match id with
   | Ok (Some id) -> Ok id
   | Ok None -> Error "Failed to create user"
@@ -99,13 +104,18 @@ let get_user_by_id (module Db : DB.CONNECTION) user_id =
 let create_flashcard (module Db : DB.CONNECTION) user_id question answer =
   let now = Int64.of_float (Unix.time ()) in
   let next_review = now in
+  let* () = DB.exec (module Db)
+    (exec
+       ~oneshot:true
+       "INSERT INTO flashcards (user_id, question, answer, next_review) VALUES (?, ?, ?, ?)"
+       (tup4 int64 string string int64))
+    (user_id, question, answer, next_review) in
   let+ id = DB.find (module Db)
     (find_opt
        ~oneshot:true
        int64
-       "INSERT INTO flashcards (user_id, question, answer, next_review) VALUES (?, ?, ?, ?) RETURNING id"
-       (tup4 int64 string string int64))
-    (user_id, question, answer, next_review) in
+       "SELECT last_insert_rowid()")
+    unit in
   match id with
   | Ok (Some id) -> Ok id
   | Ok None -> Error "Failed to create flashcard"

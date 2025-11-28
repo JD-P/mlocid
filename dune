@@ -1,5 +1,5 @@
 (executable
- (public_name spaced-repetition)
+ (public_name mlocid)
  (name main)
  (libraries dream dream-httpaf dream-pure sqlite3 yojson yaml caqti caqti-driver-sqlite3 lwt lwt_ppx logs fmt)
  (preprocess (pps lwt_ppx ppx_yojson_conv)))

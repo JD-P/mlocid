@@ -9,7 +9,7 @@ type config = {
 }
 
 let default_config = {
-  database_path = "./spaced_repetition.db";
+  database_path = "./mlocid.db";
   port = 8080;
   host = "127.0.0.1";
   static_dir = "./static";
