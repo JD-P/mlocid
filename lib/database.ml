@@ -24,13 +24,31 @@ type flashcard = {
 }
 
 let init_db (module Db : DB.CONNECTION) =
+  (*
+   * Database schema in Boyce-Codd Normal Form (BCNF):
+   * 
+   * users table:
+   *   - Candidate keys: {id}, {username}
+   *   - Functional dependencies:
+   *     * id → (username, password_hash, created_at) [id is a candidate key]
+   *     * username → (id, password_hash, created_at) [username is a candidate key]
+   *   - All determinants are candidate keys ✓ BCNF compliant
+   * 
+   * flashcards table:
+   *   - Candidate keys: {id}
+   *   - Functional dependencies:
+   *     * id → (user_id, question, answer, efactor, interval, repetitions, next_review, created_at, updated_at) [id is a candidate key]
+   *   - All determinants are candidate keys ✓ BCNF compliant
+   *   - No transitive dependencies: all attributes depend directly on the primary key
+   *)
   let* () = DB.exec (module Db)
     (exec
        "CREATE TABLE IF NOT EXISTS users (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           username TEXT UNIQUE NOT NULL,
           password_hash TEXT NOT NULL,
-          created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+          created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+          CONSTRAINT users_username_unique UNIQUE (username)
         )"
        ~oneshot:true) in
   let* () = DB.exec (module Db)
@@ -40,13 +58,14 @@ let init_db (module Db : DB.CONNECTION) =
           user_id INTEGER NOT NULL,
           question TEXT NOT NULL,
           answer TEXT NOT NULL,
-          efactor REAL NOT NULL DEFAULT 2.5,
-          interval INTEGER NOT NULL DEFAULT 0,
-          repetitions INTEGER NOT NULL DEFAULT 0,
-          next_review INTEGER NOT NULL,
-          created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
-          updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
-          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+          efactor REAL NOT NULL DEFAULT 2.5 CHECK (efactor >= 1.3),
+          interval INTEGER NOT NULL DEFAULT 0 CHECK (interval >= 0),
+          repetitions INTEGER NOT NULL DEFAULT 0 CHECK (repetitions >= 0),
+          next_review INTEGER NOT NULL CHECK (next_review > 0),
+          created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')) CHECK (created_at > 0),
+          updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')) CHECK (updated_at > 0),
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+          CONSTRAINT flashcards_id_pk PRIMARY KEY (id)
         )"
        ~oneshot:true) in
   let* () = DB.exec (module Db)
