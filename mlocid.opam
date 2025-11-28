@@ -3,8 +3,8 @@ name: "mlocid"
 version: "0.1.0"
 synopsis: "A spaced repetition web application using Dream"
 description: "A web application for spaced repetition learning with SM-2 algorithm"
-maintainer: "Your Name"
-authors: ["Your Name"]
+maintainer: "John David Pressman"
+authors: ["John David Pressman"]
 license: "Apache-2.0"
 depends: [
   "ocaml" {>= "4.14.0"}
