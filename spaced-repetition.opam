@@ -1,0 +1,40 @@
+opam-version: "2.0"
+name: "spaced-repetition"
+version: "0.1.0"
+synopsis: "A spaced repetition web application using Dream"
+description: "A web application for spaced repetition learning with SM-2 algorithm"
+maintainer: "Your Name"
+authors: ["Your Name"]
+license: "MIT"
+depends: [
+  "ocaml" {>= "4.14.0"}
+  "dune" {>= "3.0"}
+  "dream"
+  "dream-httpaf"
+  "dream-pure"
+  "sqlite3"
+  "yojson"
+  "yaml"
+  "caqti"
+  "caqti-driver-sqlite3"
+  "ppx_yojson_conv"
+  "lwt"
+  "lwt_ppx"
+  "cohttp-lwt-unix"
+  "logs"
+  "fmt"
+]
+build: [
+  ["dune" "subst"] {dev}
+  [
+    "dune"
+    "build"
+    "-p"
+    name
+    "-j"
+    jobs
+    "@install"
+    "@runtest" {with-test}
+  ]
+]
+dev-repo: "git+https://github.com/yourusername/spaced-repetition.git"
