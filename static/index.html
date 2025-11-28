@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mlocid - Spaced Repetition</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="/static/mathjax/es5/tex-mml-chtml.js"></script>
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+            }
+        };
+    </script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>mlocid</h1>
+            <nav>
+                <a href="/login">Login</a>
+                <a href="/register">Register</a>
+            </nav>
+        </header>
+        <main>
+            <div class="welcome">
+                <h2>Welcome to mlocid</h2>
+                <p>A spaced repetition learning system using the SM-2 algorithm.</p>
+                <p>Create flashcards, study them, and let the algorithm optimize your learning schedule.</p>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

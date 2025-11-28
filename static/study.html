@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study - mlocid</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="/static/mathjax/es5/tex-mml-chtml.js"></script>
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+            }
+        };
+    </script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><a href="/">mlocid</a></h1>
+            <nav>
+                <a href="/cards">My Cards</a>
+                <a href="/study">Study</a>
+                <a href="#" id="logout">Logout</a>
+            </nav>
+        </header>
+        <main>
+            <div id="studyArea">
+                <div id="noCards" class="message">
+                    <p>No cards due for review. Great job!</p>
+                    <a href="/cards">Manage your cards</a>
+                </div>
+                <div id="cardView" class="card-view" style="display: none;">
+                    <div class="card-info">
+                        <span id="cardProgress"></span>
+                    </div>
+                    <div class="card">
+                        <div id="cardFront" class="card-side">
+                            <h3>Question</h3>
+                            <div id="questionText"></div>
+                            <button id="showAnswerBtn">Show Answer</button>
+                        </div>
+                        <div id="cardBack" class="card-side" style="display: none;">
+                            <h3>Answer</h3>
+                            <div id="answerText"></div>
+                            <div class="quality-buttons">
+                                <p>How well did you remember this?</p>
+                                <div class="quality-grid">
+                                    <button class="quality-btn" data-quality="0">0 - Blackout</button>
+                                    <button class="quality-btn" data-quality="1">1 - Incorrect (remembered)</button>
+                                    <button class="quality-btn" data-quality="2">2 - Incorrect (easy)</button>
+                                    <button class="quality-btn" data-quality="3">3 - Correct (difficult)</button>
+                                    <button class="quality-btn" data-quality="4">4 - Correct (hesitation)</button>
+                                    <button class="quality-btn" data-quality="5">5 - Perfect</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="/static/app.js"></script>
+    <script src="/static/study.js"></script>
+</body>
+</html>
