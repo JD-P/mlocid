@@ -85,6 +85,9 @@ These tests verify:
 - Flashcard CRUD operations
 - SM-2 algorithm correctness
 - Database operations
+- **Security**: Users cannot access other users' flashcards
+- **Security**: Unauthenticated users cannot access protected endpoints
+- **Security**: Authorization checks for all API endpoints
 
 ### Frontend Selenium Tests
 

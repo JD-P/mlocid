@@ -7,6 +7,7 @@ test: test-backend test-frontend
 
 test-backend:
 	dune exec test_backend
+	dune exec test_api_security
 
 test-frontend:
 	@echo "Starting server in background for Selenium tests..."
