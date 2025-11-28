@@ -86,13 +86,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         const importText = document.getElementById('importText').value;
         
         try {
-            const { response, data } = await apiCall('/api/import/mnemosyne', {
+            const response = await fetch('/api/import/mnemosyne', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'text/plain',
                 },
+                credentials: 'same-origin',
                 body: importText,
             });
+            const data = await response.json();
             
             if (response.ok && data.success) {
                 alert(`Imported ${data.data.imported} cards successfully`);

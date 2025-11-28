@@ -240,7 +240,8 @@ let import_mnemosyne_handler db user_id request =
       if trimmed = "" then process_lines acc rest
       else
         match String.split_on_char '\t' trimmed with
-        | [question; answer] ->
+        | question :: answer_parts ->
+          let answer = String.concat "\t" answer_parts in
           let* result = DB.create_flashcard db user_id question answer in
           (match result with
           | Ok _ -> process_lines (acc + 1) rest

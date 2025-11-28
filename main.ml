@@ -48,9 +48,14 @@ let router db =
   ]
 
 let () =
-  let config_path = match Array.to_list Sys.argv with
-    | _ :: "--config" :: path :: _ -> path
-    | _ -> "config.yaml"
+  let config_path = 
+    let args = Array.to_list Sys.argv in
+    let rec find_config = function
+      | [] -> "config.yaml"
+      | "--config" :: path :: _ -> path
+      | _ :: rest -> find_config rest
+    in
+    find_config args
   in
   let config = Config.load_config_yaml config_path in
   
