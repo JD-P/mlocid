@@ -6,10 +6,10 @@ open Caqti_request
 (* We define it here to avoid needing Caqti_lwt module in library compilation *)
 module type CONNECTION = sig
   type 'a future = 'a Lwt.t
-  val exec : 'a Caqti_request.t -> 'a -> (unit, Caqti_error.t) result future
-  val find : 'b Caqti_request.t -> unit -> ('b option, Caqti_error.t) result future
-  val find_opt : 'a Caqti_request.t -> 'a -> ('b option, Caqti_error.t) result future
-  val collect_list : 'a Caqti_request.t -> 'a -> ('b list, Caqti_error.t) result future
+  val exec : ('a, unit, [< Caqti_error.call_or_retrieve ]) Caqti_request.t -> 'a -> (unit, Caqti_error.t) result future
+  val find : ('a, 'b option, [< Caqti_error.call_or_retrieve ]) Caqti_request.t -> 'a -> ('b option, Caqti_error.t) result future
+  val find_opt : ('a, 'b option, [< Caqti_error.call_or_retrieve ]) Caqti_request.t -> 'a -> ('b option, Caqti_error.t) result future
+  val collect_list : ('a, 'b list, [< Caqti_error.call_or_retrieve ]) Caqti_request.t -> 'a -> ('b list, Caqti_error.t) result future
 end
 
 type user = {

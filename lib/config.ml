@@ -52,14 +52,14 @@ let load_config_yaml path =
     (* Extract values from YAML - using a simpler approach *)
     let get_string key default = 
       try
-        match Yaml.Util.find yaml [key] with
+        match Yaml.Util.find yaml key with
         | Some (`String s) -> s
         | _ -> default
       with _ -> default
     in
     let get_int key default =
       try
-        match Yaml.Util.find yaml [key] with
+        match Yaml.Util.find yaml key with
         | Some (`Float f) -> int_of_float f
         | Some (`Int i) -> i
         | _ -> default
