@@ -41,7 +41,7 @@ let register_handler db request =
       let* result = DB.create_user db username password_hash in
       match result with
       | Ok user_id ->
-        let* _ = Dream.set_session request "user_id" (Int64.to_string user_id) in
+        let* () = Dream.set_session_field request "user_id" (Int64.to_string user_id) in
         success_response (`Assoc [("user_id", `String (Int64.to_string user_id)); ("username", `String username)])
         |> Lwt.return
       | Error msg -> error_response `Conflict msg |> Lwt.return
@@ -60,7 +60,7 @@ let login_handler db request =
       match result with
       | Ok (Some user) ->
         if Auth.verify_password password user.DB.password_hash then
-          let* _ = Dream.set_session request "user_id" (Int64.to_string user.DB.id) in
+          let* () = Dream.set_session_field request "user_id" (Int64.to_string user.DB.id) in
           success_response (`Assoc [("user_id", `String (Int64.to_string user.DB.id)); ("username", `String user.DB.username)])
           |> Lwt.return
         else

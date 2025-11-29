@@ -40,7 +40,7 @@ let create_test_request ?(user_id=None) ~meth ~path () =
   in
   match user_id with
   | Some uid -> 
-    let _ = Dream.set_session request "user_id" (Int64.to_string uid) in
+    let _ = Dream.set_session_field request "user_id" (Int64.to_string uid) in
     request
   | None -> request
 
@@ -148,7 +148,7 @@ let test_authenticated_user_cannot_access_other_users_flashcard _ =
         (* User2 tries to access User1's flashcard via API *)
         let path = Printf.sprintf "/api/flashcards/%Ld" card_id in
         let request = Dream.request path in
-        let _ = Dream.set_session request "user_id" (Int64.to_string user2_id) in
+        let _ = Dream.set_session_field request "user_id" (Int64.to_string user2_id) in
         let* response = get_flashcard_handler db user2_id request in
         let status = Dream.status response in
         assert_equal `NotFound status; (* Should return 404, not the card *)
@@ -174,7 +174,7 @@ let test_authenticated_user_cannot_update_other_users_flashcard _ =
         let path = Printf.sprintf "/api/flashcards/%Ld" card_id in
         let request = Dream.request path in
         (* Note: Method and body setting may need Dream's actual API - simplified for now *)
-        let _ = Dream.set_session request "user_id" (Int64.to_string user2_id) in
+        let _ = Dream.set_session_field request "user_id" (Int64.to_string user2_id) in
         (* Set the path parameter - Dream.param extracts from the path *)
         let* response = update_flashcard_handler db user2_id request in
         let status = Dream.status response in
@@ -206,7 +206,7 @@ let test_authenticated_user_cannot_delete_other_users_flashcard _ =
         (* User2 tries to delete User1's flashcard via API *)
         let path = Printf.sprintf "/api/flashcards/%Ld" card_id in
         let request = Dream.request path in
-        let _ = Dream.set_session request "user_id" (Int64.to_string user2_id) in
+        let _ = Dream.set_session_field request "user_id" (Int64.to_string user2_id) in
         let* response = delete_flashcard_handler db user2_id request in
         let status = Dream.status response in
         (* Delete should succeed (no error), but card should still exist for user1 *)
@@ -465,7 +465,7 @@ let test_sql_injection_via_api_create_flashcard _ =
         (String.escaped question) (String.escaped answer) in
       let request = Dream.request "/api/flashcards" in
       (* Note: Method and body setting may need Dream's actual API - simplified for now *)
-      let _ = Dream.set_session request "user_id" (Int64.to_string user_id) in
+      let _ = Dream.set_session_field request "user_id" (Int64.to_string user_id) in
       let* response = create_flashcard_handler db user_id request in
       let status = Dream.status response in
       (* Should succeed (treating as literal string) *)
@@ -504,7 +504,7 @@ let test_sql_injection_in_path_parameter _ =
         let* () = iter_lwt (fun malicious_id ->
           let path = Printf.sprintf "/api/flashcards/%s" malicious_id in
           let request = Dream.request path in
-          let _ = Dream.set_session request "user_id" (Int64.to_string user_id) in
+          let _ = Dream.set_session_field request "user_id" (Int64.to_string user_id) in
           (* Dream.param should extract the ID, but Int64.of_string_opt should fail for non-numeric *)
           let* response = get_flashcard_handler db user_id request in
           let status = Dream.status response in
@@ -538,7 +538,7 @@ let test_sql_injection_in_import_data _ =
       let import_data = Printf.sprintf "%s\tAnswer with %s" payload payload in
       let request = Dream.request "/api/import/mnemosyne" in
       (* Note: Method and body setting may need Dream's actual API - simplified for now *)
-      let _ = Dream.set_session request "user_id" (Int64.to_string user_id) in
+      let _ = Dream.set_session_field request "user_id" (Int64.to_string user_id) in
       let* response = import_mnemosyne_handler db user_id request in
       let status = Dream.status response in
       (* Should succeed (treating as literal data) *)
