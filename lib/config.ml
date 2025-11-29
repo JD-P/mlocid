@@ -1,6 +1,8 @@
 open Yojson.Safe
 open Yojson.Safe.Util
 
+(* Yaml module might need to be opened or accessed differently *)
+
 type config = {
   database_path: string;
   port: int;
@@ -31,7 +33,19 @@ let load_config path =
 
 let load_config_yaml path =
   try
-    let yaml = match Yaml.of_file path with
+    (* Read YAML file content *)
+    let ic = open_in path in
+    let rec read_lines acc =
+      try
+        let line = input_line ic in
+        read_lines (line :: acc)
+      with
+      | End_of_file -> List.rev acc
+    in
+    let lines = read_lines [] in
+    close_in ic;
+    let content = String.concat "\n" lines in
+    let yaml = match Yaml.of_string content with
       | Ok y -> y
       | Error _ -> raise (Invalid_argument "Failed to parse YAML file")
     in
