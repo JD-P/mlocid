@@ -10,7 +10,7 @@ let logger = Logs.Src.create "mlocid" ~doc:"Mlocid application"
 let () = Logs.Src.set_level logger (Some Logs.Info)
 
 let init_database config =
-  let uri = Printf.sprintf "sqlite3:%s" config.Config.database_path in
+  let uri = Printf.sprintf "sqlite3:%s" config.database_path in
   let* connection = Caqti_lwt.connect (Uri.of_string uri) in
   match connection with
   | Ok (module Db : CONNECTION) ->
@@ -65,8 +65,8 @@ let () =
     let app = Dream.logger @@
               Dream.memory_sessions @@
               router db in
-    let port = config.Config.port in
-    let host = config.Config.host in
+    let port = config.port in
+    let host = config.host in
     Logs.info (fun m -> m "Starting mlocid server on %s:%d" host port);
     Dream.run ~interface:host ~port:port app
   | Error msg ->

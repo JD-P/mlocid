@@ -18,8 +18,8 @@ let setup_test_db () =
     Lwt.return (Ok (module Db : CONNECTION))
   | Error e -> Lwt.return (Error (Caqti_error.show e))
 
-let create_test_request ?(user_id=None) ~method ~path () =
-  let request = Dream.request ~method path in
+let create_test_request ?(user_id=None) ~meth ~path () =
+  let request = Dream.request ~method:meth path in
   match user_id with
   | Some uid -> 
     let _ = Dream.set_session request "user_id" (Int64.to_string uid) in
@@ -30,7 +30,7 @@ let test_unauthenticated_cannot_access_flashcards _ =
   let* db_result = setup_test_db () in
   match db_result with
   | Ok db ->
-    let request = create_test_request ~method:`GET ~path:"/api/flashcards" () in
+    let request = create_test_request ~meth:`GET ~path:"/api/flashcards" () in
     let* response = require_auth (get_flashcards_handler db) request in
     let status = Dream.status response in
     assert_equal `Unauthorized status;
@@ -41,7 +41,7 @@ let test_unauthenticated_cannot_create_flashcard _ =
   let* db_result = setup_test_db () in
   match db_result with
   | Ok db ->
-    let request = create_test_request ~method:`POST ~path:"/api/flashcards" () in
+    let request = create_test_request ~meth:`POST ~path:"/api/flashcards" () in
     let* response = require_auth (create_flashcard_handler db) request in
     let status = Dream.status response in
     assert_equal `Unauthorized status;
@@ -52,7 +52,7 @@ let test_unauthenticated_cannot_get_flashcard _ =
   let* db_result = setup_test_db () in
   match db_result with
   | Ok db ->
-    let request = create_test_request ~method:`GET ~path:"/api/flashcards/1" () in
+    let request = create_test_request ~meth:`GET ~path:"/api/flashcards/1" () in
     let* response = require_auth (get_flashcard_handler db) request in
     let status = Dream.status response in
     assert_equal `Unauthorized status;
@@ -63,7 +63,7 @@ let test_unauthenticated_cannot_update_flashcard _ =
   let* db_result = setup_test_db () in
   match db_result with
   | Ok db ->
-    let request = create_test_request ~method:`PUT ~path:"/api/flashcards/1" () in
+    let request = create_test_request ~meth:`PUT ~path:"/api/flashcards/1" () in
     let* response = require_auth (update_flashcard_handler db) request in
     let status = Dream.status response in
     assert_equal `Unauthorized status;
@@ -74,7 +74,7 @@ let test_unauthenticated_cannot_delete_flashcard _ =
   let* db_result = setup_test_db () in
   match db_result with
   | Ok db ->
-    let request = create_test_request ~method:`DELETE ~path:"/api/flashcards/1" () in
+    let request = create_test_request ~meth:`DELETE ~path:"/api/flashcards/1" () in
     let* response = require_auth (delete_flashcard_handler db) request in
     let status = Dream.status response in
     assert_equal `Unauthorized status;
@@ -85,7 +85,7 @@ let test_unauthenticated_cannot_get_due_flashcards _ =
   let* db_result = setup_test_db () in
   match db_result with
   | Ok db ->
-    let request = create_test_request ~method:`GET ~path:"/api/study/due" () in
+    let request = create_test_request ~meth:`GET ~path:"/api/study/due" () in
     let* response = require_auth (get_due_flashcards_handler db) request in
     let status = Dream.status response in
     assert_equal `Unauthorized status;
@@ -96,7 +96,7 @@ let test_unauthenticated_cannot_review_flashcard _ =
   let* db_result = setup_test_db () in
   match db_result with
   | Ok db ->
-    let request = create_test_request ~method:`POST ~path:"/api/study/review/1" () in
+    let request = create_test_request ~meth:`POST ~path:"/api/study/review/1" () in
     let* response = require_auth (review_flashcard_handler db) request in
     let status = Dream.status response in
     assert_equal `Unauthorized status;
@@ -107,7 +107,7 @@ let test_unauthenticated_cannot_import _ =
   let* db_result = setup_test_db () in
   match db_result with
   | Ok db ->
-    let request = create_test_request ~method:`POST ~path:"/api/import/mnemosyne" () in
+    let request = create_test_request ~meth:`POST ~path:"/api/import/mnemosyne" () in
     let* response = require_auth (import_mnemosyne_handler db) request in
     let status = Dream.status response in
     assert_equal `Unauthorized status;
