@@ -155,7 +155,7 @@ let get_user_by_username (module Db : CONNECTION) username =
   let+ result = Db.find_opt
     (find_opt_with_param
        ~oneshot:true
-       string
+       Caqti_type.string
        (t3 Caqti_type.int64 Caqti_type.string Caqti_type.string)
        "SELECT id, username, password_hash FROM users WHERE username = ?")
     username in
