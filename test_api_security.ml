@@ -255,7 +255,7 @@ let test_sql_injection_in_username_registration _ =
           (* Username should be stored exactly as provided, not executed *)
           assert_equal username user.username;
           (* Verify no other users were affected *)
-          let* all_users = Database.get_user_by_id db user_id in
+          let* all_users = get_user_by_id (module (val db) : CONNECTION) user_id in
           (match all_users with
           | Ok (Some _) -> Lwt.return_unit
           | _ -> assert_failure "User should exist after registration")
