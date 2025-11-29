@@ -73,7 +73,7 @@ let init_db (module Db : CONNECTION) =
    *   - All determinants are candidate keys ✓ BCNF compliant
    *   - No transitive dependencies: all attributes depend directly on the primary key
    *)
-  let* () = Db.exec
+  let* exec_result = Db.exec
     (exec
        ~oneshot:true
        "CREATE TABLE IF NOT EXISTS users (
@@ -85,7 +85,10 @@ let init_db (module Db : CONNECTION) =
         )"
        Caqti_type.unit)
     () in
-  let* () = Db.exec
+  match exec_result with
+  | Ok () -> ()
+  | Error e -> failwith (Caqti_error.show e);
+  let* exec_result = Db.exec
     (exec
        ~oneshot:true
        "CREATE TABLE IF NOT EXISTS flashcards (
@@ -104,27 +107,39 @@ let init_db (module Db : CONNECTION) =
         )"
        Caqti_type.unit)
     () in
-  let* () = Db.exec
+  match exec_result with
+  | Ok () -> ()
+  | Error e -> failwith (Caqti_error.show e);
+  let* exec_result1 = Db.exec
     (exec
        ~oneshot:true
        "CREATE INDEX IF NOT EXISTS idx_flashcards_user_id ON flashcards(user_id)"
        Caqti_type.unit)
     () in
-  let* () = Db.exec
+  (match exec_result1 with
+  | Ok () -> ()
+  | Error e -> failwith (Caqti_error.show e));
+  let* exec_result2 = Db.exec
     (exec
        ~oneshot:true
        "CREATE INDEX IF NOT EXISTS idx_flashcards_next_review ON flashcards(next_review)"
        Caqti_type.unit)
     () in
+  match exec_result2 with
+  | Ok () -> ()
+  | Error e -> failwith (Caqti_error.show e);
   Lwt.return_unit
 
 let create_user (module Db : CONNECTION) username password_hash =
-  let* () = Db.exec
+  let* exec_result = Db.exec
     (exec
        ~oneshot:true
        "INSERT INTO users (username, password_hash) VALUES (?, ?)"
        (tup2 string string))
     (username, password_hash) in
+  match exec_result with
+  | Ok () -> ()
+  | Error e -> failwith (Caqti_error.show e);
   let+ id = Db.find
     (find_opt
        ~oneshot:true
@@ -164,12 +179,15 @@ let get_user_by_id (module Db : CONNECTION) user_id =
 let create_flashcard (module Db : CONNECTION) user_id question answer =
   let now = Int64.of_float (Unix.time ()) in
   let next_review = now in
-  let* () = Db.exec
+  let* exec_result = Db.exec
     (exec
        ~oneshot:true
        "INSERT INTO flashcards (user_id, question, answer, next_review) VALUES (?, ?, ?, ?)"
        (tup4 int64 string string int64))
     (user_id, question, answer, next_review) in
+  match exec_result with
+  | Ok () -> ()
+  | Error e -> failwith (Caqti_error.show e);
   let+ id = Db.find
     (find_opt
        ~oneshot:true
@@ -228,7 +246,7 @@ let get_due_flashcards (module Db : CONNECTION) user_id =
 
 let update_flashcard (module Db : CONNECTION) flashcard =
   let now = Int64.of_float (Unix.time ()) in
-  let+ result = Caqti_lwt.exec (module Db)
+  let+ result = Db.exec
     (exec
        ~oneshot:true
        "UPDATE flashcards SET question = ?, answer = ?, efactor = ?, interval = ?, repetitions = ?, next_review = ?, updated_at = ? WHERE id = ? AND user_id = ?"
@@ -239,7 +257,7 @@ let update_flashcard (module Db : CONNECTION) flashcard =
   | Error e -> Error (Caqti_error.show e)
 
 let delete_flashcard (module Db : CONNECTION) flashcard_id user_id =
-  let+ result = Caqti_lwt.exec (module Db)
+  let+ result = Db.exec
     (exec
        ~oneshot:true
        "DELETE FROM flashcards WHERE id = ? AND user_id = ?"
