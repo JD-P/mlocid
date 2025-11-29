@@ -13,9 +13,9 @@ let setup_test_db () =
   let uri = Printf.sprintf "sqlite3:%s" test_db_path in
   let* connection = Caqti_lwt_unix.connect (Uri.of_string uri) in
   match connection with
-  | Ok (module Db : CONNECTION) ->
+  | Ok (module Db : Caqti_lwt.CONNECTION) ->
     let* () = init_db (module Db) in
-    Lwt.return (Ok (module Db : CONNECTION))
+    Lwt.return (Ok (module Db : Caqti_lwt.CONNECTION))
   | Error e -> Lwt.return (Error (Caqti_error.show e))
 
 let test_create_user _ =
