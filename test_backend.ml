@@ -222,7 +222,7 @@ let test_get_due_flashcards _ =
         let due_card = { card1 with next_review = past } in
         let* _ = update_flashcard db due_card in
         Lwt.return_unit
-      | _ -> ());
+      | _ -> Lwt.return_unit);
       
       (* Create a card that's not due (future) *)
       let* _ = create_flashcard db user_id "Future Q" "Future A" in

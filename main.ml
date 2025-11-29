@@ -6,12 +6,10 @@ module DB = Database
 module Config = Config
 module API = Api
 
-type config = Config.config
-
 let logger = Logs.Src.create "mlocid" ~doc:"Mlocid application"
 let () = Logs.Src.set_level logger (Some Logs.Info)
 
-let init_database (config : config) =
+let init_database config =
   let uri = Printf.sprintf "sqlite3:%s" config.database_path in
   let* connection = Caqti_lwt_unix.connect (Uri.of_string uri) in
   match connection with
