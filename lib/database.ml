@@ -2,6 +2,9 @@ open Lwt.Syntax
 open Caqti_type
 open Caqti_request
 
+(* The request building functions exec, find_opt, collect should be available *)
+(* If not found, they might be in Caqti_type or have different names *)
+
 (* Connection module type - matches Caqti_lwt.CONNECTION interface *)
 (* We define it here to avoid needing Caqti_lwt module in library compilation *)
 module type CONNECTION = sig
