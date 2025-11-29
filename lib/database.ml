@@ -85,9 +85,9 @@ let init_db (module Db : CONNECTION) =
         )"
        Caqti_type.unit)
     () in
-  match exec_result with
-  | Ok () -> ()
-  | Error e -> failwith (Caqti_error.show e);
+  let* () = match exec_result with
+  | Ok () -> Lwt.return_unit
+  | Error e -> failwith (Caqti_error.show e) in
   let* exec_result = Db.exec
     (exec
        ~oneshot:true
@@ -107,27 +107,27 @@ let init_db (module Db : CONNECTION) =
         )"
        Caqti_type.unit)
     () in
-  match exec_result with
-  | Ok () -> ()
-  | Error e -> failwith (Caqti_error.show e);
+  let* () = match exec_result with
+  | Ok () -> Lwt.return_unit
+  | Error e -> failwith (Caqti_error.show e) in
   let* exec_result1 = Db.exec
     (exec
        ~oneshot:true
        "CREATE INDEX IF NOT EXISTS idx_flashcards_user_id ON flashcards(user_id)"
        Caqti_type.unit)
     () in
-  (match exec_result1 with
-  | Ok () -> ()
-  | Error e -> failwith (Caqti_error.show e));
+  let* () = match exec_result1 with
+  | Ok () -> Lwt.return_unit
+  | Error e -> failwith (Caqti_error.show e) in
   let* exec_result2 = Db.exec
     (exec
        ~oneshot:true
        "CREATE INDEX IF NOT EXISTS idx_flashcards_next_review ON flashcards(next_review)"
        Caqti_type.unit)
     () in
-  match exec_result2 with
-  | Ok () -> ()
-  | Error e -> failwith (Caqti_error.show e);
+  let* () = match exec_result2 with
+  | Ok () -> Lwt.return_unit
+  | Error e -> failwith (Caqti_error.show e) in
   Lwt.return_unit
 
 let create_user (module Db : CONNECTION) username password_hash =
@@ -137,9 +137,9 @@ let create_user (module Db : CONNECTION) username password_hash =
        "INSERT INTO users (username, password_hash) VALUES (?, ?)"
        (tup2 string string))
     (username, password_hash) in
-  match exec_result with
-  | Ok () -> ()
-  | Error e -> failwith (Caqti_error.show e);
+  let* () = match exec_result with
+  | Ok () -> Lwt.return_unit
+  | Error e -> failwith (Caqti_error.show e) in
   let+ id = Db.find
     (find_opt
        ~oneshot:true
@@ -185,9 +185,9 @@ let create_flashcard (module Db : CONNECTION) user_id question answer =
        "INSERT INTO flashcards (user_id, question, answer, next_review) VALUES (?, ?, ?, ?)"
        (tup4 int64 string string int64))
     (user_id, question, answer, next_review) in
-  match exec_result with
-  | Ok () -> ()
-  | Error e -> failwith (Caqti_error.show e);
+  let* () = match exec_result with
+  | Ok () -> Lwt.return_unit
+  | Error e -> failwith (Caqti_error.show e) in
   let+ id = Db.find
     (find_opt
        ~oneshot:true
