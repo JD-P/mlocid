@@ -3,13 +3,13 @@ open Dream
 open Caqti_lwt
 
 module DB = Database
-module Config = Config
+open Config
 module API = Api
 
 let logger = Logs.Src.create "mlocid" ~doc:"Mlocid application"
 let () = Logs.Src.set_level logger (Some Logs.Info)
 
-let init_database (config : Config.config) =
+let init_database (config : config) =
   let uri = Printf.sprintf "sqlite3:%s" config.database_path in
   let* connection = Caqti_lwt.connect (Uri.of_string uri) in
   match connection with
@@ -57,7 +57,7 @@ let () =
     in
     find_config args
   in
-  let config : Config.config = Config.load_config_yaml config_path in
+  let config = load_config_yaml config_path in
   
   let* db_result = init_database config in
   match db_result with

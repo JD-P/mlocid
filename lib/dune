@@ -1,5 +1,6 @@
 (library
  (name mlocid_lib)
  (public_name mlocid.lib)
+ (modules api auth config database sm2)
  (libraries dream dream-httpaf dream-pure yojson yaml caqti caqti-driver-sqlite3 lwt lwt_ppx)
  (flags :standard -w -33))
