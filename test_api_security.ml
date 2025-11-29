@@ -151,7 +151,7 @@ let test_authenticated_user_cannot_access_other_users_flashcard _ =
         let _ = Dream.set_session_field request "user_id" (Int64.to_string user2_id) in
         let* response = get_flashcard_handler db user2_id request in
         let status = Dream.status response in
-        assert_equal `NotFound status; (* Should return 404, not the card *)
+        assert_equal `Not_Found status; (* Should return 404, not the card *)
         Lwt.return_unit
       | Error msg -> assert_failure ("Failed to create flashcard: " ^ msg)
     | _ -> assert_failure "Failed to create users"
@@ -178,7 +178,7 @@ let test_authenticated_user_cannot_update_other_users_flashcard _ =
         (* Set the path parameter - Dream.param extracts from the path *)
         let* response = update_flashcard_handler db user2_id request in
         let status = Dream.status response in
-        assert_equal `NotFound status; (* Should return 404 *)
+        assert_equal `Not_Found status; (* Should return 404 *)
         (* Verify card wasn't updated *)
         let* verify_result = get_flashcard db card_id user1_id in
         match verify_result with
@@ -510,7 +510,7 @@ let test_sql_injection_in_path_parameter _ =
           let status = Dream.status response in
           (* Should return Bad_Request (invalid ID format) or NotFound, not execute SQL *)
           assert_bool "Should reject invalid ID format" 
-            (status = `Bad_Request || status = `NotFound);
+            (status = `Bad_Request || status = `Not_Found);
           Lwt.return_unit
         ) malicious_ids in
         (* Verify database is still intact *)

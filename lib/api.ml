@@ -45,7 +45,8 @@ let register_handler db request =
         success_response (`Assoc [("user_id", `String (Int64.to_string user_id)); ("username", `String username)])
         |> Lwt.return
       | Error msg -> error_response `Conflict msg
-    | _ -> error_response `Bad_Request "Missing username or password"
+    | Some _, None | None, Some _ | None, None ->
+      error_response `Bad_Request "Missing username or password"
 
 let login_handler db request =
   let* body = Dream.body request in
@@ -67,7 +68,8 @@ let login_handler db request =
           error_response `Unauthorized "Invalid username or password"
       | Ok None -> error_response `Unauthorized "Invalid username or password"
       | Error msg -> error_response `Internal_Server_Error msg
-    | _ -> error_response `Bad_Request "Missing username or password"
+    | Some _, None | None, Some _ | None, None ->
+      error_response `Bad_Request "Missing username or password"
 
 let logout_handler request =
   let* _ = Dream.invalidate_session request in
@@ -79,7 +81,7 @@ let get_current_user_handler db user_id _request =
   | Ok (Some user) ->
     success_response (`Assoc [("user_id", `String (Int64.to_string user.DB.id)); ("username", `String user.DB.username)])
     |> Lwt.return
-  | Ok None -> error_response `NotFound "User not found"
+  | Ok None -> error_response `Not_Found "User not found"
   | Error msg -> error_response `Internal_Server_Error msg
 
 let create_flashcard_handler db user_id request =
@@ -133,7 +135,7 @@ let get_flashcard_handler db user_id request =
         ("repetitions", `Int card.DB.repetitions);
         ("next_review", `String (Int64.to_string card.DB.next_review));
       ]) |> Lwt.return
-    | Ok None -> error_response `NotFound "Flashcard not found"
+    | Ok None -> error_response `Not_Found "Flashcard not found"
     | Error msg -> error_response `Internal_Server_Error msg
   | None -> error_response `Bad_Request "Invalid flashcard ID"
 
@@ -155,7 +157,7 @@ let update_flashcard_handler db user_id request =
         match result with
         | Ok () -> success_response (`Null) |> Lwt.return
         | Error msg -> error_response `Internal_Server_Error msg
-      | Ok None -> error_response `NotFound "Flashcard not found"
+      | Ok None -> error_response `Not_Found "Flashcard not found"
       | Error msg -> error_response `Internal_Server_Error msg
   | None -> error_response `Bad_Request "Invalid flashcard ID"
 
@@ -226,7 +228,7 @@ let review_flashcard_handler db user_id request =
               ("next_review", `String (Int64.to_string updated_card.DB.next_review));
             ]) |> Lwt.return
           | Error msg -> error_response `Internal_Server_Error msg
-        | Ok None -> error_response `NotFound "Flashcard not found"
+        | Ok None -> error_response `Not_Found "Flashcard not found"
         | Error msg -> error_response `Internal_Server_Error msg
       | _ -> error_response `Bad_Request "Quality must be between 0 and 5"
   | None -> error_response `Bad_Request "Invalid flashcard ID"
