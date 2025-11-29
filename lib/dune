@@ -1,4 +1,5 @@
 (library
  (name mlocid_lib)
  (public_name mlocid.lib)
- (libraries yojson yaml caqti caqti-driver-sqlite3 lwt lwt_ppx))
+ (libraries yojson yaml caqti caqti-driver-sqlite3 lwt lwt_ppx)
+ (flags :standard -w -33))

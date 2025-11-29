@@ -1,9 +1,9 @@
 open Lwt.Syntax
 open Caqti_type
 open Caqti_request
-open Caqti_mult
-open Caqti_query
 open Caqti_template.Row_mult
+
+(* We use Caqti_query.of_string_exn but don't open the module to avoid conflicts *)
 
 (* Convenience functions for building requests - these wrap Caqti_request.create *)
 (* exec: takes parameters (or unit), returns nothing *)
