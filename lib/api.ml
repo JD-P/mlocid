@@ -39,12 +39,12 @@ let register_handler db request =
     | Some username, Some password ->
       let password_hash = Auth.hash_password password in
       let* result = DB.create_user db username password_hash in
-      match result with
+      (match result with
       | Ok user_id ->
         let* () = Dream.set_session_field request "user_id" (Int64.to_string user_id) in
         success_response (`Assoc [("user_id", `String (Int64.to_string user_id)); ("username", `String username)])
         |> Lwt.return
-      | Error msg -> error_response `Conflict msg
+      | Error msg -> error_response `Conflict msg)
     | Some _, None ->
       error_response `Bad_Request "Missing username or password"
     | None, Some _ ->
@@ -62,7 +62,7 @@ let login_handler db request =
     match username, password with
     | Some username, Some password ->
       let* result = DB.get_user_by_username db username in
-      match result with
+      (match result with
       | Ok (Some user) ->
         if Auth.verify_password password user.DB.password_hash then
           let* () = Dream.set_session_field request "user_id" (Int64.to_string user.DB.id) in
@@ -71,7 +71,7 @@ let login_handler db request =
         else
           error_response `Unauthorized "Invalid username or password"
       | Ok None -> error_response `Unauthorized "Invalid username or password"
-      | Error msg -> error_response `Internal_Server_Error msg
+      | Error msg -> error_response `Internal_Server_Error msg)
     | Some _, None ->
       error_response `Bad_Request "Missing username or password"
     | None, Some _ ->
