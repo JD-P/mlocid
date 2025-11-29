@@ -26,12 +26,12 @@ let get_user_id request =
 let require_auth handler request =
   match get_user_id request with
   | Some user_id -> handler user_id request
-  | None -> error_response `Unauthorized "Authentication required" |> Lwt.return
+  | None -> error_response `Unauthorized "Authentication required"
 
 let register_handler db request =
   let* body = Dream.body request in
   match Yojson.Safe.from_string body with
-  | exception _ -> error_response `Bad_Request "Invalid JSON" |> Lwt.return
+  | exception _ -> error_response `Bad_Request "Invalid JSON"
   | json ->
     let username = json |> member "username" |> to_string_option in
     let password = json |> member "password" |> to_string_option in
@@ -44,13 +44,13 @@ let register_handler db request =
         let* () = Dream.set_session_field request "user_id" (Int64.to_string user_id) in
         success_response (`Assoc [("user_id", `String (Int64.to_string user_id)); ("username", `String username)])
         |> Lwt.return
-      | Error msg -> error_response `Conflict msg |> Lwt.return
-    | _ -> error_response `Bad_Request "Missing username or password" |> Lwt.return
+      | Error msg -> error_response `Conflict msg
+    | _ -> error_response `Bad_Request "Missing username or password"
 
 let login_handler db request =
   let* body = Dream.body request in
   match Yojson.Safe.from_string body with
-  | exception _ -> error_response `Bad_Request "Invalid JSON" |> Lwt.return
+  | exception _ -> error_response `Bad_Request "Invalid JSON"
   | json ->
     let username = json |> member "username" |> to_string_option in
     let password = json |> member "password" |> to_string_option in
@@ -64,10 +64,10 @@ let login_handler db request =
           success_response (`Assoc [("user_id", `String (Int64.to_string user.DB.id)); ("username", `String user.DB.username)])
           |> Lwt.return
         else
-          error_response `Unauthorized "Invalid username or password" |> Lwt.return
-      | Ok None -> error_response `Unauthorized "Invalid username or password" |> Lwt.return
-      | Error msg -> error_response `Internal_Server_Error msg |> Lwt.return
-    | _ -> error_response `Bad_Request "Missing username or password" |> Lwt.return
+          error_response `Unauthorized "Invalid username or password"
+      | Ok None -> error_response `Unauthorized "Invalid username or password"
+      | Error msg -> error_response `Internal_Server_Error msg
+    | _ -> error_response `Bad_Request "Missing username or password"
 
 let logout_handler request =
   let* _ = Dream.invalidate_session request in
@@ -79,13 +79,13 @@ let get_current_user_handler db user_id _request =
   | Ok (Some user) ->
     success_response (`Assoc [("user_id", `String (Int64.to_string user.DB.id)); ("username", `String user.DB.username)])
     |> Lwt.return
-  | Ok None -> error_response `NotFound "User not found" |> Lwt.return
-  | Error msg -> error_response `Internal_Server_Error msg |> Lwt.return
+  | Ok None -> error_response `NotFound "User not found"
+  | Error msg -> error_response `Internal_Server_Error msg
 
 let create_flashcard_handler db user_id request =
   let* body = Dream.body request in
   match Yojson.Safe.from_string body with
-  | exception _ -> error_response `Bad_Request "Invalid JSON" |> Lwt.return
+  | exception _ -> error_response `Bad_Request "Invalid JSON"
   | json ->
     let question = json |> member "question" |> to_string_option in
     let answer = json |> member "answer" |> to_string_option in
@@ -96,8 +96,8 @@ let create_flashcard_handler db user_id request =
       | Ok flashcard_id ->
         success_response (`Assoc [("flashcard_id", `String (Int64.to_string flashcard_id))])
         |> Lwt.return
-      | Error msg -> error_response `Internal_Server_Error msg |> Lwt.return
-    | _ -> error_response `Bad_Request "Missing question or answer" |> Lwt.return
+      | Error msg -> error_response `Internal_Server_Error msg
+    | _ -> error_response `Bad_Request "Missing question or answer"
 
 let get_flashcards_handler db user_id _request =
   let* result = DB.get_flashcards db user_id in
@@ -115,7 +115,7 @@ let get_flashcards_handler db user_id _request =
       ]
     ) flashcards) in
     success_response cards_json |> Lwt.return
-  | Error msg -> error_response `Internal_Server_Error msg |> Lwt.return
+  | Error msg -> error_response `Internal_Server_Error msg
 
 let get_flashcard_handler db user_id request =
   let flashcard_id_str = Dream.param request "id" in
@@ -133,9 +133,9 @@ let get_flashcard_handler db user_id request =
         ("repetitions", `Int card.DB.repetitions);
         ("next_review", `String (Int64.to_string card.DB.next_review));
       ]) |> Lwt.return
-    | Ok None -> error_response `NotFound "Flashcard not found" |> Lwt.return
-    | Error msg -> error_response `Internal_Server_Error msg |> Lwt.return
-  | None -> error_response `Bad_Request "Invalid flashcard ID" |> Lwt.return
+    | Ok None -> error_response `NotFound "Flashcard not found"
+    | Error msg -> error_response `Internal_Server_Error msg
+  | None -> error_response `Bad_Request "Invalid flashcard ID"
 
 let update_flashcard_handler db user_id request =
   let flashcard_id_str = Dream.param request "id" in
@@ -143,7 +143,7 @@ let update_flashcard_handler db user_id request =
   | Some flashcard_id ->
     let* body = Dream.body request in
     match Yojson.Safe.from_string body with
-    | exception _ -> error_response `Bad_Request "Invalid JSON" |> Lwt.return
+    | exception _ -> error_response `Bad_Request "Invalid JSON"
     | json ->
       let* existing_result = DB.get_flashcard db flashcard_id user_id in
       match existing_result with
@@ -154,10 +154,10 @@ let update_flashcard_handler db user_id request =
         let* result = DB.update_flashcard db updated_card in
         match result with
         | Ok () -> success_response (`Null) |> Lwt.return
-        | Error msg -> error_response `Internal_Server_Error msg |> Lwt.return
-      | Ok None -> error_response `NotFound "Flashcard not found" |> Lwt.return
-      | Error msg -> error_response `Internal_Server_Error msg |> Lwt.return
-  | None -> error_response `Bad_Request "Invalid flashcard ID" |> Lwt.return
+        | Error msg -> error_response `Internal_Server_Error msg
+      | Ok None -> error_response `NotFound "Flashcard not found"
+      | Error msg -> error_response `Internal_Server_Error msg
+  | None -> error_response `Bad_Request "Invalid flashcard ID"
 
 let delete_flashcard_handler db user_id request =
   let flashcard_id_str = Dream.param request "id" in
@@ -166,8 +166,8 @@ let delete_flashcard_handler db user_id request =
     let* result = DB.delete_flashcard db flashcard_id user_id in
     match result with
     | Ok () -> success_response (`Null) |> Lwt.return
-    | Error msg -> error_response `Internal_Server_Error msg |> Lwt.return
-  | None -> error_response `Bad_Request "Invalid flashcard ID" |> Lwt.return
+    | Error msg -> error_response `Internal_Server_Error msg
+  | None -> error_response `Bad_Request "Invalid flashcard ID"
 
 let get_due_flashcards_handler db user_id _request =
   let* result = DB.get_due_flashcards db user_id in
@@ -185,7 +185,7 @@ let get_due_flashcards_handler db user_id _request =
       ]
     ) flashcards) in
     success_response cards_json |> Lwt.return
-  | Error msg -> error_response `Internal_Server_Error msg |> Lwt.return
+  | Error msg -> error_response `Internal_Server_Error msg
 
 let review_flashcard_handler db user_id request =
   let flashcard_id_str = Dream.param request "id" in
@@ -193,7 +193,7 @@ let review_flashcard_handler db user_id request =
   | Some flashcard_id ->
     let* body = Dream.body request in
     match Yojson.Safe.from_string body with
-    | exception _ -> error_response `Bad_Request "Invalid JSON" |> Lwt.return
+    | exception _ -> error_response `Bad_Request "Invalid JSON"
     | json ->
       let quality_int = json |> member "quality" |> to_int_option in
       match quality_int with
@@ -225,11 +225,11 @@ let review_flashcard_handler db user_id request =
               ("repetitions", `Int updated_card.DB.repetitions);
               ("next_review", `String (Int64.to_string updated_card.DB.next_review));
             ]) |> Lwt.return
-          | Error msg -> error_response `Internal_Server_Error msg |> Lwt.return
-        | Ok None -> error_response `NotFound "Flashcard not found" |> Lwt.return
-        | Error msg -> error_response `Internal_Server_Error msg |> Lwt.return
-      | _ -> error_response `Bad_Request "Quality must be between 0 and 5" |> Lwt.return
-  | None -> error_response `Bad_Request "Invalid flashcard ID" |> Lwt.return
+          | Error msg -> error_response `Internal_Server_Error msg
+        | Ok None -> error_response `NotFound "Flashcard not found"
+        | Error msg -> error_response `Internal_Server_Error msg
+      | _ -> error_response `Bad_Request "Quality must be between 0 and 5"
+  | None -> error_response `Bad_Request "Invalid flashcard ID"
 
 let import_mnemosyne_handler db user_id request =
   let* body = Dream.body request in
