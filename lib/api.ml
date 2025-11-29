@@ -1,6 +1,7 @@
 open Lwt.Syntax
 open Dream
 open Yojson.Safe
+open Yojson.Safe.Util
 
 module DB = Database
 module SM2 = Sm2
