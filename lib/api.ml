@@ -17,7 +17,7 @@ let success_response data =
   json_response (`Assoc [("success", `Bool true); ("data", data)])
 
 let get_user_id request =
-  match Dream.session request "user_id" with
+  match Dream.session_field request "user_id" with
   | Some user_id_str ->
     (try Some (Int64.of_string user_id_str) with _ -> None)
   | None -> None
