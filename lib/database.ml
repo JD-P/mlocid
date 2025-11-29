@@ -1,6 +1,7 @@
 open Lwt.Syntax
 open Caqti_type
-open Caqti_query
+open Caqti_request
+open Caqti_template.Request
 
 (* Connection module type - matches Caqti_lwt.CONNECTION interface *)
 (* We define it here to avoid needing Caqti_lwt module in library compilation *)
