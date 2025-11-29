@@ -58,7 +58,8 @@ let init_db (module Db : CONNECTION) =
           created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
           CONSTRAINT users_username_unique UNIQUE (username)
         )"
-       ~oneshot:true) in
+       ~oneshot:true)
+    unit in
   let* () = Db.exec
     (exec
        "CREATE TABLE IF NOT EXISTS flashcards (
@@ -75,15 +76,18 @@ let init_db (module Db : CONNECTION) =
           FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
           CONSTRAINT flashcards_id_pk PRIMARY KEY (id)
         )"
-       ~oneshot:true) in
+       ~oneshot:true)
+    unit in
   let* () = Db.exec
     (exec
        "CREATE INDEX IF NOT EXISTS idx_flashcards_user_id ON flashcards(user_id)"
-       ~oneshot:true) in
+       ~oneshot:true)
+    unit in
   let* () = Db.exec
     (exec
        "CREATE INDEX IF NOT EXISTS idx_flashcards_next_review ON flashcards(next_review)"
-       ~oneshot:true) in
+       ~oneshot:true)
+    unit in
   Lwt.return_unit
 
 let create_user (module Db : CONNECTION) username password_hash =

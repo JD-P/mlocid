@@ -49,19 +49,29 @@ let load_config_yaml path =
       | Ok y -> y
       | Error _ -> raise (Invalid_argument "Failed to parse YAML file")
     in
-    (* Extract values from YAML - using a simpler approach *)
+    (* Extract values from YAML - try to access as a mapping and get values *)
     let get_string key default = 
       try
-        match Yaml.Util.find yaml key with
-        | Some (`String s) -> s
+        match yaml with
+        | `O assoc ->
+          (try
+             match List.assoc key assoc with
+             | `String s -> s
+             | _ -> default
+           with Not_found -> default)
         | _ -> default
       with _ -> default
     in
     let get_int key default =
       try
-        match Yaml.Util.find yaml key with
-        | Some (`Float f) -> int_of_float f
-        | Some (`Int i) -> i
+        match yaml with
+        | `O assoc ->
+          (try
+             match List.assoc key assoc with
+             | `Float f -> int_of_float f
+             | `Int i -> i
+             | _ -> default
+           with Not_found -> default)
         | _ -> default
       with _ -> default
     in
