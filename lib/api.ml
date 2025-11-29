@@ -10,7 +10,8 @@ let json_response json =
   Dream.response ~headers:[("Content-Type", "application/json; charset=utf-8")] (Yojson.Safe.to_string json)
 
 let error_response status message =
-  json_response (`Assoc [("error", `String message)]) |> Dream.status status
+  Dream.respond ~status ~headers:[("Content-Type", "application/json; charset=utf-8")] 
+    (Yojson.Safe.to_string (`Assoc [("error", `String message)]))
 
 let success_response data =
   json_response (`Assoc [("success", `Bool true); ("data", data)])
