@@ -134,14 +134,14 @@ let create_user (module Db : CONNECTION) username password_hash =
   let* () = match exec_result with
   | Ok () -> Lwt.return_unit
   | Error e -> failwith (Caqti_error.show e) in
-  let+ id = Db.find
+  let+ id_result = Db.find_opt
     (find_opt
        ~oneshot:true
        Caqti_type.int64
        "SELECT last_insert_rowid()")
     () in
-  match id with
-  | Ok (Some id) -> Ok id
+  match id_result with
+  | Ok (Some id_val) -> Ok id_val
   | Ok None -> Error "Failed to create user"
   | Error e -> Error (Caqti_error.show e)
 
