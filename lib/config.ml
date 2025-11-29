@@ -31,7 +31,10 @@ let load_config path =
 
 let load_config_yaml path =
   try
-    let yaml = Yaml.of_file_exn path in
+    let yaml = match Yaml.of_file path with
+      | Ok y -> y
+      | Error _ -> raise (Invalid_argument "Failed to parse YAML file")
+    in
     let database_path = Yaml.Util.to_string_default (Yaml.Util.find_exn yaml ["database_path"]) default_config.database_path in
     let port = Yaml.Util.to_int_default (Yaml.Util.find_exn yaml ["port"]) default_config.port in
     let host = Yaml.Util.to_string_default (Yaml.Util.find_exn yaml ["host"]) default_config.host in
