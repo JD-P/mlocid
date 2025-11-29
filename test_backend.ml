@@ -227,12 +227,12 @@ let test_get_due_flashcards _ =
       (* Create a card that's not due (future) *)
       let* _ = create_flashcard db user_id "Future Q" "Future A" in
       let* card2_result = get_flashcard db 2L user_id in
-      (match card2_result with
+      let* () = match card2_result with
       | Ok (Some card2) ->
         let future_card = { card2 with next_review = future } in
         let* _ = update_flashcard db future_card in
         Lwt.return_unit
-      | _ -> Lwt.return_unit) in
+      | _ -> Lwt.return_unit in
       
       let* result = get_due_flashcards db user_id in
       match result with

@@ -4,7 +4,7 @@ open Dream
 open Caqti_lwt
 open Database
 open Auth
-module Api = Api
+open Api
 
 let test_db_path = "/tmp/mlocid_api_test.db"
 
