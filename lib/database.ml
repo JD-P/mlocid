@@ -7,19 +7,19 @@ open Caqti_query
 (* Convenience functions for building requests - these wrap Caqti_request.create *)
 (* exec: takes parameters, returns nothing *)
 let exec ?oneshot query_string arg_type =
-  create ?oneshot arg_type unit Zero (fun _ -> Caqti_query.of_string_exn query_string)
+  create ?oneshot arg_type unit Caqti_mult.Zero (fun _ -> Caqti_query.of_string_exn query_string)
 
 (* find_opt: returns optional single row, no parameters (unit) *)
 let find_opt ?oneshot row_type query_string =
-  create ?oneshot unit row_type One (fun _ -> Caqti_query.of_string_exn query_string)
+  create ?oneshot unit row_type Caqti_mult.One (fun _ -> Caqti_query.of_string_exn query_string)
 
 (* find_opt with explicit parameter type *)
 let find_opt_with_param ?oneshot arg_type row_type query_string =
-  create ?oneshot arg_type row_type One (fun _ -> Caqti_query.of_string_exn query_string)
+  create ?oneshot arg_type row_type Caqti_mult.One (fun _ -> Caqti_query.of_string_exn query_string)
 
 (* collect: takes parameters, returns multiple rows *)
 let collect ?oneshot row_type query_string arg_type =
-  create ?oneshot arg_type row_type Many (fun _ -> Caqti_query.of_string_exn query_string)
+  create ?oneshot arg_type row_type Caqti_mult.Many (fun _ -> Caqti_query.of_string_exn query_string)
 
 (* Connection module type - matches Caqti_lwt.CONNECTION interface *)
 (* We define it here to avoid needing Caqti_lwt module in library compilation *)
