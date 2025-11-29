@@ -1,9 +1,8 @@
 open Lwt.Syntax
 open Caqti_type
-open Caqti_request
 
-(* The request building functions exec, find_opt, collect should be available *)
-(* If not found, they might be in Caqti_type or have different names *)
+(* Try using Caqti_request module directly without opening *)
+module Rq = Caqti_request
 
 (* Connection module type - matches Caqti_lwt.CONNECTION interface *)
 (* We define it here to avoid needing Caqti_lwt module in library compilation *)
@@ -53,7 +52,7 @@ let init_db (module Db : CONNECTION) =
    *   - No transitive dependencies: all attributes depend directly on the primary key
    *)
   let* () = Db.exec
-    (exec
+    (Rq.exec
        "CREATE TABLE IF NOT EXISTS users (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           username TEXT UNIQUE NOT NULL,
@@ -64,7 +63,7 @@ let init_db (module Db : CONNECTION) =
        ~oneshot:true)
     unit in
   let* () = Db.exec
-    (exec
+    (Rq.exec
        "CREATE TABLE IF NOT EXISTS flashcards (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           user_id INTEGER NOT NULL,
@@ -82,12 +81,12 @@ let init_db (module Db : CONNECTION) =
        ~oneshot:true)
     unit in
   let* () = Db.exec
-    (exec
+    (Rq.exec
        "CREATE INDEX IF NOT EXISTS idx_flashcards_user_id ON flashcards(user_id)"
        ~oneshot:true)
     unit in
   let* () = Db.exec
-    (exec
+    (Rq.exec
        "CREATE INDEX IF NOT EXISTS idx_flashcards_next_review ON flashcards(next_review)"
        ~oneshot:true)
     unit in
@@ -95,13 +94,13 @@ let init_db (module Db : CONNECTION) =
 
 let create_user (module Db : CONNECTION) username password_hash =
   let* () = Db.exec
-    (exec
+    (Rq.exec
        ~oneshot:true
        "INSERT INTO users (username, password_hash) VALUES (?, ?)"
        (tup2 string string))
     (username, password_hash) in
   let+ id = Db.find
-    (find_opt
+    (Rq.find_opt
        ~oneshot:true
        int64
        "SELECT last_insert_rowid()")
@@ -113,7 +112,7 @@ let create_user (module Db : CONNECTION) username password_hash =
 
 let get_user_by_username (module Db : CONNECTION) username =
   let+ result = Db.find_opt
-    (find_opt
+    (Rq.find_opt
        ~oneshot:true
        (tup3 int64 string string)
        "SELECT id, username, password_hash FROM users WHERE username = ?")
@@ -125,7 +124,7 @@ let get_user_by_username (module Db : CONNECTION) username =
 
 let get_user_by_id (module Db : CONNECTION) user_id =
   let+ result = Db.find_opt
-    (find_opt
+    (Rq.find_opt
        ~oneshot:true
        (tup3 int64 string string)
        "SELECT id, username, password_hash FROM users WHERE id = ?")
@@ -139,13 +138,13 @@ let create_flashcard (module Db : CONNECTION) user_id question answer =
   let now = Int64.of_float (Unix.time ()) in
   let next_review = now in
   let* () = Db.exec
-    (exec
+    (Rq.exec
        ~oneshot:true
        "INSERT INTO flashcards (user_id, question, answer, next_review) VALUES (?, ?, ?, ?)"
        (tup4 int64 string string int64))
     (user_id, question, answer, next_review) in
   let+ id = Db.find
-    (find_opt
+    (Rq.find_opt
        ~oneshot:true
        int64
        "SELECT last_insert_rowid()")
@@ -157,7 +156,7 @@ let create_flashcard (module Db : CONNECTION) user_id question answer =
 
 let get_flashcard (module Db : CONNECTION) flashcard_id user_id =
   let+ result = Db.find_opt
-    (find_opt
+    (Rq.find_opt
        ~oneshot:true
        (tup8 int64 int64 string string float int int int64)
        "SELECT id, user_id, question, answer, efactor, interval, repetitions, next_review FROM flashcards WHERE id = ? AND user_id = ?")
@@ -171,7 +170,7 @@ let get_flashcard (module Db : CONNECTION) flashcard_id user_id =
 
 let get_flashcards (module Db : CONNECTION) user_id =
   let+ result = Db.collect_list
-    (collect
+    (Rq.collect
        ~oneshot:true
        (tup8 int64 int64 string string float int int int64)
        "SELECT id, user_id, question, answer, efactor, interval, repetitions, next_review FROM flashcards WHERE user_id = ? ORDER BY created_at DESC")
@@ -187,7 +186,7 @@ let get_flashcards (module Db : CONNECTION) user_id =
 let get_due_flashcards (module Db : CONNECTION) user_id =
   let now = Int64.of_float (Unix.time ()) in
   let+ result = Db.collect_list
-    (collect
+    (Rq.collect
        ~oneshot:true
        (tup8 int64 int64 string string float int int int64)
        "SELECT id, user_id, question, answer, efactor, interval, repetitions, next_review FROM flashcards WHERE user_id = ? AND next_review <= ? ORDER BY next_review ASC")
@@ -203,7 +202,7 @@ let get_due_flashcards (module Db : CONNECTION) user_id =
 let update_flashcard (module Db : CONNECTION) flashcard =
   let now = Int64.of_float (Unix.time ()) in
   let+ result = Caqti_lwt.exec (module Db)
-    (exec
+    (Rq.exec
        ~oneshot:true
        "UPDATE flashcards SET question = ?, answer = ?, efactor = ?, interval = ?, repetitions = ?, next_review = ?, updated_at = ? WHERE id = ? AND user_id = ?"
        (tup9 string string float int int int64 int64 int64 int64))
@@ -214,7 +213,7 @@ let update_flashcard (module Db : CONNECTION) flashcard =
 
 let delete_flashcard (module Db : CONNECTION) flashcard_id user_id =
   let+ result = Caqti_lwt.exec (module Db)
-    (exec
+    (Rq.exec
        ~oneshot:true
        "DELETE FROM flashcards WHERE id = ? AND user_id = ?"
        (tup2 int64 int64))
