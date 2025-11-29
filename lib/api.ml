@@ -102,12 +102,17 @@ let create_flashcard_handler db user_id request =
     match question, answer with
     | Some question, Some answer ->
       let* result = DB.create_flashcard db user_id question answer in
-      match result with
+      (match result with
       | Ok flashcard_id ->
         success_response (`Assoc [("flashcard_id", `String (Int64.to_string flashcard_id))])
         |> Lwt.return
-      | Error msg -> error_response `Internal_Server_Error msg
-    | _ -> error_response `Bad_Request "Missing question or answer"
+      | Error msg -> error_response `Internal_Server_Error msg)
+    | Some _, None ->
+      error_response `Bad_Request "Missing question or answer"
+    | None, Some _ ->
+      error_response `Bad_Request "Missing question or answer"
+    | None, None ->
+      error_response `Bad_Request "Missing question or answer"
 
 let get_flashcards_handler db user_id _request =
   let* result = DB.get_flashcards db user_id in
@@ -132,7 +137,7 @@ let get_flashcard_handler db user_id request =
   match Int64.of_string_opt flashcard_id_str with
   | Some flashcard_id ->
     let* result = DB.get_flashcard db flashcard_id user_id in
-    match result with
+    (match result with
     | Ok (Some card) ->
       success_response (`Assoc [
         ("id", `String (Int64.to_string card.DB.id));
@@ -144,7 +149,7 @@ let get_flashcard_handler db user_id request =
         ("next_review", `String (Int64.to_string card.DB.next_review));
       ]) |> Lwt.return
     | Ok None -> error_response `Not_Found "Flashcard not found"
-    | Error msg -> error_response `Internal_Server_Error msg
+    | Error msg -> error_response `Internal_Server_Error msg)
   | None -> error_response `Bad_Request "Invalid flashcard ID"
 
 let update_flashcard_handler db user_id request =
@@ -156,17 +161,17 @@ let update_flashcard_handler db user_id request =
     | exception _ -> error_response `Bad_Request "Invalid JSON"
     | json ->
       let* existing_result = DB.get_flashcard db flashcard_id user_id in
-      match existing_result with
+      (match existing_result with
       | Ok (Some existing_card) ->
         let question = json |> member "question" |> to_string_option |> Option.value ~default:existing_card.DB.question in
         let answer = json |> member "answer" |> to_string_option |> Option.value ~default:existing_card.DB.answer in
         let updated_card = { existing_card with DB.question; answer } in
         let* result = DB.update_flashcard db updated_card in
-        match result with
+        (match result with
         | Ok () -> success_response (`Null) |> Lwt.return
-        | Error msg -> error_response `Internal_Server_Error msg
+        | Error msg -> error_response `Internal_Server_Error msg)
       | Ok None -> error_response `Not_Found "Flashcard not found"
-      | Error msg -> error_response `Internal_Server_Error msg
+      | Error msg -> error_response `Internal_Server_Error msg)
   | None -> error_response `Bad_Request "Invalid flashcard ID"
 
 let delete_flashcard_handler db user_id request =
@@ -174,9 +179,9 @@ let delete_flashcard_handler db user_id request =
   match Int64.of_string_opt flashcard_id_str with
   | Some flashcard_id ->
     let* result = DB.delete_flashcard db flashcard_id user_id in
-    match result with
+    (match result with
     | Ok () -> success_response (`Null) |> Lwt.return
-    | Error msg -> error_response `Internal_Server_Error msg
+    | Error msg -> error_response `Internal_Server_Error msg)
   | None -> error_response `Bad_Request "Invalid flashcard ID"
 
 let get_due_flashcards_handler db user_id _request =
@@ -210,7 +215,7 @@ let review_flashcard_handler db user_id request =
       | Some q when q >= 0 && q <= 5 ->
         let quality = SM2.int_to_quality q in
         let* existing_result = DB.get_flashcard db flashcard_id user_id in
-        match existing_result with
+        (match existing_result with
         | Ok (Some existing_card) ->
           let state = {
             SM2.efactor = existing_card.DB.efactor;
@@ -227,7 +232,7 @@ let review_flashcard_handler db user_id request =
             next_review;
           } in
           let* result = DB.update_flashcard db updated_card in
-          match result with
+          (match result with
           | Ok () ->
             success_response (`Assoc [
               ("efactor", `Float updated_card.DB.efactor);
@@ -235,9 +240,9 @@ let review_flashcard_handler db user_id request =
               ("repetitions", `Int updated_card.DB.repetitions);
               ("next_review", `String (Int64.to_string updated_card.DB.next_review));
             ]) |> Lwt.return
-          | Error msg -> error_response `Internal_Server_Error msg
+          | Error msg -> error_response `Internal_Server_Error msg)
         | Ok None -> error_response `Not_Found "Flashcard not found"
-        | Error msg -> error_response `Internal_Server_Error msg
+        | Error msg -> error_response `Internal_Server_Error msg)
       | _ -> error_response `Bad_Request "Quality must be between 0 and 5"
   | None -> error_response `Bad_Request "Invalid flashcard ID"
 
