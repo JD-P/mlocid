@@ -45,7 +45,11 @@ let register_handler db request =
         success_response (`Assoc [("user_id", `String (Int64.to_string user_id)); ("username", `String username)])
         |> Lwt.return
       | Error msg -> error_response `Conflict msg
-    | Some _, None | None, Some _ | None, None ->
+    | Some _, None ->
+      error_response `Bad_Request "Missing username or password"
+    | None, Some _ ->
+      error_response `Bad_Request "Missing username or password"
+    | None, None ->
       error_response `Bad_Request "Missing username or password"
 
 let login_handler db request =
@@ -68,7 +72,11 @@ let login_handler db request =
           error_response `Unauthorized "Invalid username or password"
       | Ok None -> error_response `Unauthorized "Invalid username or password"
       | Error msg -> error_response `Internal_Server_Error msg
-    | Some _, None | None, Some _ | None, None ->
+    | Some _, None ->
+      error_response `Bad_Request "Missing username or password"
+    | None, Some _ ->
+      error_response `Bad_Request "Missing username or password"
+    | None, None ->
       error_response `Bad_Request "Missing username or password"
 
 let logout_handler request =
