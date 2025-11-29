@@ -384,8 +384,8 @@ let test_users_only_see_their_own_due_flashcards _ =
       | Ok (Some card1) ->
         let due_card1 = { card1 with next_review = past } in
         let* _ = update_flashcard db due_card1 in
-        ()
-      | _ -> ());
+        Lwt.return_unit
+      | _ -> Lwt.return_unit) in
       
       (* User2 creates a due card *)
       let* _ = create_flashcard db user2_id "User2 Due Q" "User2 Due A" in
