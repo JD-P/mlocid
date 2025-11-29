@@ -9,9 +9,9 @@ module API = Api
 let logger = Logs.Src.create "mlocid" ~doc:"Mlocid application"
 let () = Logs.Src.set_level logger (Some Logs.Info)
 
-let init_database (config : Config.config) =
+let init_database config =
   let uri = Printf.sprintf "sqlite3:%s" config.database_path in
-  let* connection = connect (Uri.of_string uri) in
+  let* connection = Caqti_lwt.connect (Uri.of_string uri) in
   match connection with
   | Ok (module Db : DB.CONNECTION) ->
     let* () = DB.init_db (module Db) in

@@ -11,7 +11,7 @@ let setup_test_db () =
   (* Remove old test database if it exists *)
   let _ = try Unix.unlink test_db_path with _ -> () in
   let uri = Printf.sprintf "sqlite3:%s" test_db_path in
-  let* connection = connect (Uri.of_string uri) in
+  let* connection = Caqti_lwt.connect (Uri.of_string uri) in
   match connection with
   | Ok (module Db : CONNECTION) ->
     let* () = init_db (module Db) in
