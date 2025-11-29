@@ -6,15 +6,23 @@ open Caqti_mult
 (* Convenience functions for building requests - these wrap Caqti_request.create *)
 (* exec: takes parameters, returns nothing *)
 let exec ?oneshot query_string arg_type =
-  create ?oneshot arg_type unit Zero (fun _ -> Caqti_query.of_string_exn query_string)
+  create ?oneshot arg_type unit Zero (fun _ -> Caqti_query.of_string query_string)
 
-(* find_opt: can take parameters, returns optional single row *)
+(* find_opt: returns optional single row, can optionally take parameters *)
+(* For queries without parameters, arg_type is unit *)
+(* For queries with parameters, we need to create a version that accepts arg_type *)
+(* Since the usage pattern varies, we'll provide both versions *)
 let find_opt ?oneshot row_type query_string =
-  create ?oneshot unit row_type One (fun _ -> Caqti_query.of_string_exn query_string)
+  (* Default: no parameters *)
+  create ?oneshot unit row_type One (fun _ -> Caqti_query.of_string query_string)
+
+(* find_opt with explicit parameter type *)
+let find_opt_with_param ?oneshot arg_type row_type query_string =
+  create ?oneshot arg_type row_type One (fun _ -> Caqti_query.of_string query_string)
 
 (* collect: takes parameters, returns multiple rows *)
 let collect ?oneshot row_type query_string arg_type =
-  create ?oneshot arg_type row_type Many (fun _ -> Caqti_query.of_string_exn query_string)
+  create ?oneshot arg_type row_type Many (fun _ -> Caqti_query.of_string query_string)
 
 (* Connection module type - matches Caqti_lwt.CONNECTION interface *)
 (* We define it here to avoid needing Caqti_lwt module in library compilation *)
@@ -124,8 +132,9 @@ let create_user (module Db : CONNECTION) username password_hash =
 
 let get_user_by_username (module Db : CONNECTION) username =
   let+ result = Db.find_opt
-    (find_opt
+    (find_opt_with_param
        ~oneshot:true
+       string
        (tup3 int64 string string)
        "SELECT id, username, password_hash FROM users WHERE username = ?")
     username in
@@ -168,11 +177,11 @@ let create_flashcard (module Db : CONNECTION) user_id question answer =
 
 let get_flashcard (module Db : CONNECTION) flashcard_id user_id =
   let+ result = Db.find_opt
-    (find_opt
+    (find_opt_with_param
        ~oneshot:true
+       (tup2 int64 int64)
        (tup8 int64 int64 string string float int int int64)
        "SELECT id, user_id, question, answer, efactor, interval, repetitions, next_review FROM flashcards WHERE id = ? AND user_id = ?")
-    (tup2 int64 int64)
     (flashcard_id, user_id) in
   match result with
   | Ok (Some (id, user_id, question, answer, efactor, interval, repetitions, next_review)) ->
