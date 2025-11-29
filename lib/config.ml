@@ -49,11 +49,27 @@ let load_config_yaml path =
       | Ok y -> y
       | Error _ -> raise (Invalid_argument "Failed to parse YAML file")
     in
-    let database_path = Yaml.Util.to_string_default (Yaml.Util.find_exn yaml ["database_path"]) default_config.database_path in
-    let port = Yaml.Util.to_int_default (Yaml.Util.find_exn yaml ["port"]) default_config.port in
-    let host = Yaml.Util.to_string_default (Yaml.Util.find_exn yaml ["host"]) default_config.host in
-    let static_dir = Yaml.Util.to_string_default (Yaml.Util.find_exn yaml ["static_dir"]) default_config.static_dir in
-    let session_secret = Yaml.Util.to_string_default (Yaml.Util.find_exn yaml ["session_secret"]) default_config.session_secret in
+    (* Extract values from YAML - using a simpler approach *)
+    let get_string key default = 
+      try
+        match Yaml.Util.find yaml [key] with
+        | Some (`String s) -> s
+        | _ -> default
+      with _ -> default
+    in
+    let get_int key default =
+      try
+        match Yaml.Util.find yaml [key] with
+        | Some (`Float f) -> int_of_float f
+        | Some (`Int i) -> i
+        | _ -> default
+      with _ -> default
+    in
+    let database_path = get_string "database_path" default_config.database_path in
+    let port = get_int "port" default_config.port in
+    let host = get_string "host" default_config.host in
+    let static_dir = get_string "static_dir" default_config.static_dir in
+    let session_secret = get_string "session_secret" default_config.session_secret in
     { database_path; port; host; static_dir; session_secret }
   with
   | _ -> default_config
