@@ -218,8 +218,8 @@ let get_flashcards (module Db : CONNECTION) user_id =
     (collect
        ~oneshot:true
        (t8 Caqti_type.int64 Caqti_type.int64 Caqti_type.string Caqti_type.string Caqti_type.float Caqti_type.int Caqti_type.int Caqti_type.int64)
-       "SELECT id, user_id, question, answer, efactor, interval, repetitions, next_review FROM flashcards WHERE user_id = ? ORDER BY created_at DESC")
-    Caqti_type.int64
+       "SELECT id, user_id, question, answer, efactor, interval, repetitions, next_review FROM flashcards WHERE user_id = ? ORDER BY created_at DESC"
+       Caqti_type.int64)
     user_id in
   match result with
   | Ok rows ->
@@ -234,8 +234,8 @@ let get_due_flashcards (module Db : CONNECTION) user_id =
     (collect
        ~oneshot:true
        (t8 Caqti_type.int64 Caqti_type.int64 Caqti_type.string Caqti_type.string Caqti_type.float Caqti_type.int Caqti_type.int Caqti_type.int64)
-       "SELECT id, user_id, question, answer, efactor, interval, repetitions, next_review FROM flashcards WHERE user_id = ? AND next_review <= ? ORDER BY next_review ASC")
-    (t2 Caqti_type.int64 Caqti_type.int64)
+       "SELECT id, user_id, question, answer, efactor, interval, repetitions, next_review FROM flashcards WHERE user_id = ? AND next_review <= ? ORDER BY next_review ASC"
+       (t2 Caqti_type.int64 Caqti_type.int64))
     (user_id, now) in
   match result with
   | Ok rows ->
