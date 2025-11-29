@@ -8,15 +8,15 @@ open Caqti_template.Row_mult
 (* Convenience functions for building requests - these wrap Caqti_request.create *)
 (* exec: takes parameters (or unit), returns nothing *)
 let exec ?oneshot query_string arg_type =
-  create ?oneshot arg_type unit zero (fun _ -> Caqti_query.of_string_exn query_string)
+  create ?oneshot arg_type Caqti_type.unit zero (fun _ -> Caqti_query.of_string_exn query_string)
 
 (* exec with no parameters (unit) *)
 let exec_unit ?oneshot query_string =
-  exec ?oneshot query_string unit
+  exec ?oneshot query_string Caqti_type.unit
 
 (* find_opt: returns optional single row, no parameters (unit) *)
 let find_opt ?oneshot row_type query_string =
-  create ?oneshot unit row_type one (fun _ -> Caqti_query.of_string_exn query_string)
+  create ?oneshot Caqti_type.unit row_type one (fun _ -> Caqti_query.of_string_exn query_string)
 
 (* find_opt with explicit parameter type *)
 let find_opt_with_param ?oneshot arg_type row_type query_string =
@@ -83,8 +83,8 @@ let init_db (module Db : CONNECTION) =
           created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
           CONSTRAINT users_username_unique UNIQUE (username)
         )"
-       unit)
-    unit in
+       Caqti_type.unit)
+    () in
   let* () = Db.exec
     (exec
        ~oneshot:true
@@ -102,20 +102,20 @@ let init_db (module Db : CONNECTION) =
           FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
           CONSTRAINT flashcards_id_pk PRIMARY KEY (id)
         )"
-       unit)
-    unit in
+       Caqti_type.unit)
+    () in
   let* () = Db.exec
     (exec
        ~oneshot:true
        "CREATE INDEX IF NOT EXISTS idx_flashcards_user_id ON flashcards(user_id)"
-       unit)
-    unit in
+       Caqti_type.unit)
+    () in
   let* () = Db.exec
     (exec
        ~oneshot:true
        "CREATE INDEX IF NOT EXISTS idx_flashcards_next_review ON flashcards(next_review)"
-       unit)
-    unit in
+       Caqti_type.unit)
+    () in
   Lwt.return_unit
 
 let create_user (module Db : CONNECTION) username password_hash =
@@ -130,7 +130,7 @@ let create_user (module Db : CONNECTION) username password_hash =
        ~oneshot:true
        int64
        "SELECT last_insert_rowid()")
-    unit in
+    () in
   match id with
   | Ok (Some id) -> Ok id
   | Ok None -> Error "Failed to create user"
@@ -175,7 +175,7 @@ let create_flashcard (module Db : CONNECTION) user_id question answer =
        ~oneshot:true
        int64
        "SELECT last_insert_rowid()")
-    unit in
+    () in
   match id with
   | Ok (Some id) -> Ok id
   | Ok None -> Error "Failed to create flashcard"
