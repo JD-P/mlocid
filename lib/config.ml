@@ -69,7 +69,7 @@ let load_config_yaml path =
           (try
              match List.assoc key assoc with
              | `Float f -> int_of_float f
-             | `Int i -> i
+             | `String s -> (try int_of_string s with _ -> default)
              | _ -> default
            with Not_found -> default)
         | _ -> default
