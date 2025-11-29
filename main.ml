@@ -3,19 +3,19 @@ open Dream
 open Caqti_lwt
 
 module DB = Database
-module Config = Config
+open Config
 module API = Api
 
 let logger = Logs.Src.create "mlocid" ~doc:"Mlocid application"
 let () = Logs.Src.set_level logger (Some Logs.Info)
 
 let init_database config =
-  let uri = Printf.sprintf "sqlite3:%s" config.Config.database_path in
-  let* connection = Caqti_lwt.connect (Uri.of_string uri) in
+  let uri = Printf.sprintf "sqlite3:%s" config.database_path in
+  let* connection = Caqti_lwt_unix.connect (Uri.of_string uri) in
   match connection with
-  | Ok (module Db : CONNECTION) ->
+  | Ok (module Db : Caqti_lwt.CONNECTION) ->
     let* () = DB.init_db (module Db) in
-    Lwt.return (Ok (module Db : CONNECTION))
+    Lwt.return (Ok (module Db : Caqti_lwt.CONNECTION))
   | Error e -> Lwt.return (Error (Caqti_error.show e))
 
 let router db =
@@ -57,7 +57,7 @@ let () =
     in
     find_config args
   in
-  let config = Config.load_config_yaml config_path in
+  let config : config = load_config_yaml config_path in
   
   let* db_result = init_database config in
   match db_result with
@@ -65,8 +65,8 @@ let () =
     let app = Dream.logger @@
               Dream.memory_sessions @@
               router db in
-    let port = config.Config.port in
-    let host = config.Config.host in
+    let port = config.port in
+    let host = config.host in
     Logs.info (fun m -> m "Starting mlocid server on %s:%d" host port);
     Dream.run ~interface:host ~port:port app
   | Error msg ->

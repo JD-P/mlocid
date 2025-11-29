@@ -29,6 +29,13 @@ A spaced repetition web application built with the Dream web framework for OCaml
 opam install . --deps-only
 ```
 
+   **Note**: To install test dependencies (required for running tests), use:
+```bash
+opam install . --deps-only --with-test
+# or the short form:
+opam install . --deps-only -t
+```
+
 2. Build the application:
 ```bash
 make build
@@ -73,11 +80,18 @@ The application will be available at `http://localhost:8080` (or your configured
 
 ### Backend Unit Tests
 
+**Prerequisites**: Make sure you've installed test dependencies with `opam install . --deps-only --with-test`
+
 Run the backend API unit tests:
 ```bash
 make test-backend
 # or
 dune exec test_backend
+```
+
+Run the API security tests (including SQL injection tests):
+```bash
+dune exec test_api_security
 ```
 
 These tests verify:
@@ -88,6 +102,7 @@ These tests verify:
 - **Security**: Users cannot access other users' flashcards
 - **Security**: Unauthenticated users cannot access protected endpoints
 - **Security**: Authorization checks for all API endpoints
+- **Security**: SQL injection protection across all input fields and endpoints
 
 ### Frontend Selenium Tests
 

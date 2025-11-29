@@ -39,7 +39,7 @@ let update_efactor efactor quality =
   max 1.3 new_efactor
 
 (* Calculate next interval based on repetitions and E-Factor *)
-let calculate_interval repetitions efactor =
+let rec calculate_interval repetitions efactor =
   match repetitions with
   | 0 -> 1
   | 1 -> 6

@@ -11,11 +11,11 @@ let setup_test_db () =
   (* Remove old test database if it exists *)
   let _ = try Unix.unlink test_db_path with _ -> () in
   let uri = Printf.sprintf "sqlite3:%s" test_db_path in
-  let* connection = Caqti_lwt.connect (Uri.of_string uri) in
+  let* connection = Caqti_lwt_unix.connect (Uri.of_string uri) in
   match connection with
-  | Ok (module Db : CONNECTION) ->
+  | Ok (module Db : Caqti_lwt.CONNECTION) ->
     let* () = init_db (module Db) in
-    Lwt.return (Ok (module Db : CONNECTION))
+    Lwt.return (Ok (module Db : Caqti_lwt.CONNECTION))
   | Error e -> Lwt.return (Error (Caqti_error.show e))
 
 let test_create_user _ =
@@ -217,22 +217,22 @@ let test_get_due_flashcards _ =
       (* Create a card that's due (past) *)
       let* _ = create_flashcard db user_id "Due Q" "Due A" in
       let* card1_result = get_flashcard db 1L user_id in
-      (match card1_result with
+      let* () = match card1_result with
       | Ok (Some card1) ->
         let due_card = { card1 with next_review = past } in
         let* _ = update_flashcard db due_card in
-        ()
-      | _ -> ());
+        Lwt.return_unit
+      | _ -> Lwt.return_unit in
       
       (* Create a card that's not due (future) *)
       let* _ = create_flashcard db user_id "Future Q" "Future A" in
       let* card2_result = get_flashcard db 2L user_id in
-      (match card2_result with
+      let* () = match card2_result with
       | Ok (Some card2) ->
         let future_card = { card2 with next_review = future } in
         let* _ = update_flashcard db future_card in
-        ()
-      | _ -> ());
+        Lwt.return_unit
+      | _ -> Lwt.return_unit in
       
       let* result = get_due_flashcards db user_id in
       match result with
@@ -384,8 +384,8 @@ let test_users_only_see_their_own_due_flashcards _ =
       | Ok (Some card1) ->
         let due_card1 = { card1 with next_review = past } in
         let* _ = update_flashcard db due_card1 in
-        ()
-      | _ -> ());
+        Lwt.return_unit
+      | _ -> Lwt.return_unit) in
       
       (* User2 creates a due card *)
       let* _ = create_flashcard db user2_id "User2 Due Q" "User2 Due A" in

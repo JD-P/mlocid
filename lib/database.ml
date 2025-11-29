@@ -1,8 +1,34 @@
 open Lwt.Syntax
 open Caqti_type
 open Caqti_request
+open Caqti_template.Row_mult
 
-module DB = Caqti_lwt
+(* We use Caqti_query.of_string_exn but don't open the module to avoid conflicts *)
+
+(* Convenience functions for building requests - these wrap Caqti_request.create *)
+(* exec: takes parameters (or unit), returns nothing *)
+let exec ?oneshot query_string arg_type =
+  create ?oneshot arg_type Caqti_type.unit zero (fun _ -> Caqti_query.of_string_exn query_string)
+
+(* exec with no parameters (unit) *)
+let exec_unit ?oneshot query_string =
+  exec ?oneshot query_string Caqti_type.unit
+
+(* find_opt: returns optional single row, no parameters (unit) *)
+let find_opt ?oneshot row_type query_string =
+  create ?oneshot Caqti_type.unit row_type one (fun _ -> Caqti_query.of_string_exn query_string)
+
+(* find_opt with explicit parameter type *)
+let find_opt_with_param ?oneshot arg_type row_type query_string =
+  create ?oneshot arg_type row_type one (fun _ -> Caqti_query.of_string_exn query_string)
+
+(* collect: takes parameters, returns multiple rows *)
+let collect ?oneshot row_type query_string arg_type =
+  create ?oneshot arg_type row_type zero_or_more (fun _ -> Caqti_query.of_string_exn query_string)
+
+(* Connection module type - matches Caqti_lwt.CONNECTION interface *)
+(* We define it here to avoid needing Caqti_lwt module in library compilation *)
+module type CONNECTION = Caqti_lwt.CONNECTION
 
 type user = {
   id: int64;
@@ -23,7 +49,7 @@ type flashcard = {
   updated_at: int64;
 }
 
-let init_db (module Db : DB.CONNECTION) =
+let init_db (module Db : CONNECTION) =
   (*
    * Database schema in Boyce-Codd Normal Form (BCNF):
    * 
@@ -41,8 +67,9 @@ let init_db (module Db : DB.CONNECTION) =
    *   - All determinants are candidate keys ✓ BCNF compliant
    *   - No transitive dependencies: all attributes depend directly on the primary key
    *)
-  let* () = DB.exec (module Db)
+  let* exec_result = Db.exec
     (exec
+       ~oneshot:true
        "CREATE TABLE IF NOT EXISTS users (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           username TEXT UNIQUE NOT NULL,
@@ -50,9 +77,14 @@ let init_db (module Db : DB.CONNECTION) =
           created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
           CONSTRAINT users_username_unique UNIQUE (username)
         )"
-       ~oneshot:true) in
-  let* () = DB.exec (module Db)
+       Caqti_type.unit)
+    () in
+  let* () = match exec_result with
+  | Ok () -> Lwt.return_unit
+  | Error e -> failwith (Caqti_error.show e) in
+  let* exec_result = Db.exec
     (exec
+       ~oneshot:true
        "CREATE TABLE IF NOT EXISTS flashcards (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           user_id INTEGER NOT NULL,
@@ -67,40 +99,58 @@ let init_db (module Db : DB.CONNECTION) =
           FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
           CONSTRAINT flashcards_id_pk PRIMARY KEY (id)
         )"
-       ~oneshot:true) in
-  let* () = DB.exec (module Db)
+       Caqti_type.unit)
+    () in
+  let* () = match exec_result with
+  | Ok () -> Lwt.return_unit
+  | Error e -> failwith (Caqti_error.show e) in
+  let* exec_result1 = Db.exec
     (exec
+       ~oneshot:true
        "CREATE INDEX IF NOT EXISTS idx_flashcards_user_id ON flashcards(user_id)"
-       ~oneshot:true) in
-  let* () = DB.exec (module Db)
+       Caqti_type.unit)
+    () in
+  let* () = match exec_result1 with
+  | Ok () -> Lwt.return_unit
+  | Error e -> failwith (Caqti_error.show e) in
+  let* exec_result2 = Db.exec
     (exec
+       ~oneshot:true
        "CREATE INDEX IF NOT EXISTS idx_flashcards_next_review ON flashcards(next_review)"
-       ~oneshot:true) in
+       Caqti_type.unit)
+    () in
+  let* () = match exec_result2 with
+  | Ok () -> Lwt.return_unit
+  | Error e -> failwith (Caqti_error.show e) in
   Lwt.return_unit
 
-let create_user (module Db : DB.CONNECTION) username password_hash =
-  let* () = DB.exec (module Db)
+let create_user (module Db : CONNECTION) username password_hash =
+  let* exec_result = Db.exec
     (exec
        ~oneshot:true
        "INSERT INTO users (username, password_hash) VALUES (?, ?)"
-       (tup2 string string))
+       (t2 Caqti_type.string Caqti_type.string))
     (username, password_hash) in
-  let+ id = DB.find (module Db)
+  let* () = match exec_result with
+  | Ok () -> Lwt.return_unit
+  | Error e -> failwith (Caqti_error.show e) in
+  let+ id_result = Db.find_opt
     (find_opt
        ~oneshot:true
-       int64
+       Caqti_type.int64
        "SELECT last_insert_rowid()")
-    unit in
-  match id with
-  | Ok (Some id) -> Ok id
+    () in
+  match id_result with
+  | Ok (Some id_val) -> Ok id_val
   | Ok None -> Error "Failed to create user"
   | Error e -> Error (Caqti_error.show e)
 
-let get_user_by_username (module Db : DB.CONNECTION) username =
-  let+ result = DB.find_opt (module Db)
-    (find_opt
+let get_user_by_username (module Db : CONNECTION) username =
+  let+ result = Db.find_opt
+    (find_opt_with_param
        ~oneshot:true
-       (tup3 int64 string string)
+       Caqti_type.string
+       (t3 Caqti_type.int64 Caqti_type.string Caqti_type.string)
        "SELECT id, username, password_hash FROM users WHERE username = ?")
     username in
   match result with
@@ -108,11 +158,11 @@ let get_user_by_username (module Db : DB.CONNECTION) username =
   | Ok None -> Ok None
   | Error e -> Error (Caqti_error.show e)
 
-let get_user_by_id (module Db : DB.CONNECTION) user_id =
-  let+ result = DB.find_opt (module Db)
+let get_user_by_id (module Db : CONNECTION) user_id =
+  let+ result = Db.find_opt
     (find_opt
        ~oneshot:true
-       (tup3 int64 string string)
+       (t3 Caqti_type.int64 Caqti_type.string Caqti_type.string)
        "SELECT id, username, password_hash FROM users WHERE id = ?")
     user_id in
   match result with
@@ -120,33 +170,36 @@ let get_user_by_id (module Db : DB.CONNECTION) user_id =
   | Ok None -> Ok None
   | Error e -> Error (Caqti_error.show e)
 
-let create_flashcard (module Db : DB.CONNECTION) user_id question answer =
+let create_flashcard (module Db : CONNECTION) user_id question answer =
   let now = Int64.of_float (Unix.time ()) in
   let next_review = now in
-  let* () = DB.exec (module Db)
+  let* exec_result = Db.exec
     (exec
        ~oneshot:true
        "INSERT INTO flashcards (user_id, question, answer, next_review) VALUES (?, ?, ?, ?)"
-       (tup4 int64 string string int64))
+       (t4 Caqti_type.int64 Caqti_type.string Caqti_type.string Caqti_type.int64))
     (user_id, question, answer, next_review) in
-  let+ id = DB.find (module Db)
+  let* () = match exec_result with
+  | Ok () -> Lwt.return_unit
+  | Error e -> failwith (Caqti_error.show e) in
+  let+ id_result = Db.find_opt
     (find_opt
        ~oneshot:true
-       int64
+       Caqti_type.int64
        "SELECT last_insert_rowid()")
-    unit in
-  match id with
-  | Ok (Some id) -> Ok id
+    () in
+  match id_result with
+  | Ok (Some id_val) -> Ok id_val
   | Ok None -> Error "Failed to create flashcard"
   | Error e -> Error (Caqti_error.show e)
 
-let get_flashcard (module Db : DB.CONNECTION) flashcard_id user_id =
-  let+ result = DB.find_opt (module Db)
-    (find_opt
+let get_flashcard (module Db : CONNECTION) flashcard_id user_id =
+  let+ result = Db.find_opt
+    (find_opt_with_param
        ~oneshot:true
-       (tup8 int64 int64 string string float int int int64)
+       (t2 Caqti_type.int64 Caqti_type.int64)
+       (t8 Caqti_type.int64 Caqti_type.int64 Caqti_type.string Caqti_type.string Caqti_type.float Caqti_type.int Caqti_type.int Caqti_type.int64)
        "SELECT id, user_id, question, answer, efactor, interval, repetitions, next_review FROM flashcards WHERE id = ? AND user_id = ?")
-    (tup2 int64 int64)
     (flashcard_id, user_id) in
   match result with
   | Ok (Some (id, user_id, question, answer, efactor, interval, repetitions, next_review)) ->
@@ -154,13 +207,13 @@ let get_flashcard (module Db : DB.CONNECTION) flashcard_id user_id =
   | Ok None -> Ok None
   | Error e -> Error (Caqti_error.show e)
 
-let get_flashcards (module Db : DB.CONNECTION) user_id =
-  let+ result = DB.collect_list (module Db)
+let get_flashcards (module Db : CONNECTION) user_id =
+  let+ result = Db.collect_list
     (collect
        ~oneshot:true
-       (tup8 int64 int64 string string float int int int64)
-       "SELECT id, user_id, question, answer, efactor, interval, repetitions, next_review FROM flashcards WHERE user_id = ? ORDER BY created_at DESC")
-    int64
+       (t8 Caqti_type.int64 Caqti_type.int64 Caqti_type.string Caqti_type.string Caqti_type.float Caqti_type.int Caqti_type.int Caqti_type.int64)
+       "SELECT id, user_id, question, answer, efactor, interval, repetitions, next_review FROM flashcards WHERE user_id = ? ORDER BY created_at DESC"
+       Caqti_type.int64)
     user_id in
   match result with
   | Ok rows ->
@@ -169,14 +222,14 @@ let get_flashcards (module Db : DB.CONNECTION) user_id =
       rows)
   | Error e -> Error (Caqti_error.show e)
 
-let get_due_flashcards (module Db : DB.CONNECTION) user_id =
+let get_due_flashcards (module Db : CONNECTION) user_id =
   let now = Int64.of_float (Unix.time ()) in
-  let+ result = DB.collect_list (module Db)
+  let+ result = Db.collect_list
     (collect
        ~oneshot:true
-       (tup8 int64 int64 string string float int int int64)
-       "SELECT id, user_id, question, answer, efactor, interval, repetitions, next_review FROM flashcards WHERE user_id = ? AND next_review <= ? ORDER BY next_review ASC")
-    (tup2 int64 int64)
+       (t8 Caqti_type.int64 Caqti_type.int64 Caqti_type.string Caqti_type.string Caqti_type.float Caqti_type.int Caqti_type.int Caqti_type.int64)
+       "SELECT id, user_id, question, answer, efactor, interval, repetitions, next_review FROM flashcards WHERE user_id = ? AND next_review <= ? ORDER BY next_review ASC"
+       (t2 Caqti_type.int64 Caqti_type.int64))
     (user_id, now) in
   match result with
   | Ok rows ->
@@ -185,24 +238,24 @@ let get_due_flashcards (module Db : DB.CONNECTION) user_id =
       rows)
   | Error e -> Error (Caqti_error.show e)
 
-let update_flashcard (module Db : DB.CONNECTION) flashcard =
+let update_flashcard (module Db : CONNECTION) flashcard =
   let now = Int64.of_float (Unix.time ()) in
-  let+ result = DB.exec (module Db)
+  let+ result = Db.exec
     (exec
        ~oneshot:true
        "UPDATE flashcards SET question = ?, answer = ?, efactor = ?, interval = ?, repetitions = ?, next_review = ?, updated_at = ? WHERE id = ? AND user_id = ?"
-       (tup9 string string float int int int64 int64 int64 int64))
+       (t9 Caqti_type.string Caqti_type.string Caqti_type.float Caqti_type.int Caqti_type.int Caqti_type.int64 Caqti_type.int64 Caqti_type.int64 Caqti_type.int64))
     (flashcard.question, flashcard.answer, flashcard.efactor, flashcard.interval, flashcard.repetitions, flashcard.next_review, now, flashcard.id, flashcard.user_id) in
   match result with
   | Ok () -> Ok ()
   | Error e -> Error (Caqti_error.show e)
 
-let delete_flashcard (module Db : DB.CONNECTION) flashcard_id user_id =
-  let+ result = DB.exec (module Db)
+let delete_flashcard (module Db : CONNECTION) flashcard_id user_id =
+  let+ result = Db.exec
     (exec
        ~oneshot:true
        "DELETE FROM flashcards WHERE id = ? AND user_id = ?"
-       (tup2 int64 int64))
+       (t2 Caqti_type.int64 Caqti_type.int64))
     (flashcard_id, user_id) in
   match result with
   | Ok () -> Ok ()
