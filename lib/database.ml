@@ -135,7 +135,7 @@ let create_user (module Db : CONNECTION) username password_hash =
     (exec
        ~oneshot:true
        "INSERT INTO users (username, password_hash) VALUES (?, ?)"
-       (tup2 string string))
+       (t2 Caqti_type.string Caqti_type.string))
     (username, password_hash) in
   let* () = match exec_result with
   | Ok () -> Lwt.return_unit
@@ -143,7 +143,7 @@ let create_user (module Db : CONNECTION) username password_hash =
   let+ id = Db.find
     (find_opt
        ~oneshot:true
-       int64
+       Caqti_type.int64
        "SELECT last_insert_rowid()")
     () in
   match id with
@@ -156,7 +156,7 @@ let get_user_by_username (module Db : CONNECTION) username =
     (find_opt_with_param
        ~oneshot:true
        string
-       (tup3 int64 string string)
+       (t3 Caqti_type.int64 Caqti_type.string Caqti_type.string)
        "SELECT id, username, password_hash FROM users WHERE username = ?")
     username in
   match result with
@@ -168,7 +168,7 @@ let get_user_by_id (module Db : CONNECTION) user_id =
   let+ result = Db.find_opt
     (find_opt
        ~oneshot:true
-       (tup3 int64 string string)
+       (t3 Caqti_type.int64 Caqti_type.string Caqti_type.string)
        "SELECT id, username, password_hash FROM users WHERE id = ?")
     user_id in
   match result with
@@ -183,7 +183,7 @@ let create_flashcard (module Db : CONNECTION) user_id question answer =
     (exec
        ~oneshot:true
        "INSERT INTO flashcards (user_id, question, answer, next_review) VALUES (?, ?, ?, ?)"
-       (tup4 int64 string string int64))
+       (t4 Caqti_type.int64 Caqti_type.string Caqti_type.string Caqti_type.int64))
     (user_id, question, answer, next_review) in
   let* () = match exec_result with
   | Ok () -> Lwt.return_unit
@@ -191,7 +191,7 @@ let create_flashcard (module Db : CONNECTION) user_id question answer =
   let+ id = Db.find
     (find_opt
        ~oneshot:true
-       int64
+       Caqti_type.int64
        "SELECT last_insert_rowid()")
     () in
   match id with
@@ -203,8 +203,8 @@ let get_flashcard (module Db : CONNECTION) flashcard_id user_id =
   let+ result = Db.find_opt
     (find_opt_with_param
        ~oneshot:true
-       (tup2 int64 int64)
-       (tup8 int64 int64 string string float int int int64)
+       (t2 Caqti_type.int64 Caqti_type.int64)
+       (t8 Caqti_type.int64 Caqti_type.int64 Caqti_type.string Caqti_type.string Caqti_type.float Caqti_type.int Caqti_type.int Caqti_type.int64)
        "SELECT id, user_id, question, answer, efactor, interval, repetitions, next_review FROM flashcards WHERE id = ? AND user_id = ?")
     (flashcard_id, user_id) in
   match result with
@@ -217,9 +217,9 @@ let get_flashcards (module Db : CONNECTION) user_id =
   let+ result = Db.collect_list
     (collect
        ~oneshot:true
-       (tup8 int64 int64 string string float int int int64)
+       (t8 Caqti_type.int64 Caqti_type.int64 Caqti_type.string Caqti_type.string Caqti_type.float Caqti_type.int Caqti_type.int Caqti_type.int64)
        "SELECT id, user_id, question, answer, efactor, interval, repetitions, next_review FROM flashcards WHERE user_id = ? ORDER BY created_at DESC")
-    int64
+    Caqti_type.int64
     user_id in
   match result with
   | Ok rows ->
@@ -233,9 +233,9 @@ let get_due_flashcards (module Db : CONNECTION) user_id =
   let+ result = Db.collect_list
     (collect
        ~oneshot:true
-       (tup8 int64 int64 string string float int int int64)
+       (t8 Caqti_type.int64 Caqti_type.int64 Caqti_type.string Caqti_type.string Caqti_type.float Caqti_type.int Caqti_type.int Caqti_type.int64)
        "SELECT id, user_id, question, answer, efactor, interval, repetitions, next_review FROM flashcards WHERE user_id = ? AND next_review <= ? ORDER BY next_review ASC")
-    (tup2 int64 int64)
+    (t2 Caqti_type.int64 Caqti_type.int64)
     (user_id, now) in
   match result with
   | Ok rows ->
@@ -250,7 +250,7 @@ let update_flashcard (module Db : CONNECTION) flashcard =
     (exec
        ~oneshot:true
        "UPDATE flashcards SET question = ?, answer = ?, efactor = ?, interval = ?, repetitions = ?, next_review = ?, updated_at = ? WHERE id = ? AND user_id = ?"
-       (tup9 string string float int int int64 int64 int64 int64))
+       (t9 Caqti_type.string Caqti_type.string Caqti_type.float Caqti_type.int Caqti_type.int Caqti_type.int64 Caqti_type.int64 Caqti_type.int64 Caqti_type.int64))
     (flashcard.question, flashcard.answer, flashcard.efactor, flashcard.interval, flashcard.repetitions, flashcard.next_review, now, flashcard.id, flashcard.user_id) in
   match result with
   | Ok () -> Ok ()
@@ -261,7 +261,7 @@ let delete_flashcard (module Db : CONNECTION) flashcard_id user_id =
     (exec
        ~oneshot:true
        "DELETE FROM flashcards WHERE id = ? AND user_id = ?"
-       (tup2 int64 int64))
+       (t2 Caqti_type.int64 Caqti_type.int64))
     (flashcard_id, user_id) in
   match result with
   | Ok () -> Ok ()
