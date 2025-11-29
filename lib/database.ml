@@ -182,14 +182,14 @@ let create_flashcard (module Db : CONNECTION) user_id question answer =
   let* () = match exec_result with
   | Ok () -> Lwt.return_unit
   | Error e -> failwith (Caqti_error.show e) in
-  let+ id = Db.find
+  let+ id_result = Db.find_opt
     (find_opt
        ~oneshot:true
        Caqti_type.int64
        "SELECT last_insert_rowid()")
     () in
-  match id with
-  | Ok (Some id) -> Ok id
+  match id_result with
+  | Ok (Some id_val) -> Ok id_val
   | Ok None -> Error "Failed to create flashcard"
   | Error e -> Error (Caqti_error.show e)
 
