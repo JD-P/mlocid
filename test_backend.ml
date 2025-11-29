@@ -231,8 +231,8 @@ let test_get_due_flashcards _ =
       | Ok (Some card2) ->
         let future_card = { card2 with next_review = future } in
         let* _ = update_flashcard db future_card in
-        ()
-      | _ -> ());
+        Lwt.return_unit
+      | _ -> Lwt.return_unit) in
       
       let* result = get_due_flashcards db user_id in
       match result with
