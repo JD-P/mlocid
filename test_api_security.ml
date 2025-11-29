@@ -18,7 +18,7 @@ let rec iter_lwt f = function
 let setup_test_db () =
   let _ = try Unix.unlink test_db_path with _ -> () in
   let uri = Printf.sprintf "sqlite3:%s" test_db_path in
-  let* connection = connect uri in
+  let* connection = Caqti_lwt_unix.connect (Uri.of_string uri) in
   match connection with
   | Ok (module Db : CONNECTION) ->
     let* () = init_db (module Db) in
