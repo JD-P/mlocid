@@ -1,9 +1,3 @@
-(library
- (name mlocid_lib)
- (public_name mlocid.lib)
- (modules api auth config database sm2)
- (libraries yojson yaml caqti caqti-driver-sqlite3 lwt lwt_ppx))
-
 (executable
  (public_name mlocid)
  (name main)
