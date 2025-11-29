@@ -6,9 +6,13 @@ open Caqti_query
 open Caqti_template.Row_mult
 
 (* Convenience functions for building requests - these wrap Caqti_request.create *)
-(* exec: takes parameters, returns nothing *)
+(* exec: takes parameters (or unit), returns nothing *)
 let exec ?oneshot query_string arg_type =
   create ?oneshot arg_type unit zero (fun _ -> Caqti_query.of_string_exn query_string)
+
+(* exec with no parameters (unit) *)
+let exec_unit ?oneshot query_string =
+  exec ?oneshot query_string unit
 
 (* find_opt: returns optional single row, no parameters (unit) *)
 let find_opt ?oneshot row_type query_string =
@@ -71,6 +75,7 @@ let init_db (module Db : CONNECTION) =
    *)
   let* () = Db.exec
     (exec
+       ~oneshot:true
        "CREATE TABLE IF NOT EXISTS users (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           username TEXT UNIQUE NOT NULL,
@@ -78,10 +83,11 @@ let init_db (module Db : CONNECTION) =
           created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
           CONSTRAINT users_username_unique UNIQUE (username)
         )"
-       ~oneshot:true)
+       unit)
     unit in
   let* () = Db.exec
     (exec
+       ~oneshot:true
        "CREATE TABLE IF NOT EXISTS flashcards (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           user_id INTEGER NOT NULL,
@@ -96,17 +102,19 @@ let init_db (module Db : CONNECTION) =
           FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
           CONSTRAINT flashcards_id_pk PRIMARY KEY (id)
         )"
-       ~oneshot:true)
+       unit)
     unit in
   let* () = Db.exec
     (exec
+       ~oneshot:true
        "CREATE INDEX IF NOT EXISTS idx_flashcards_user_id ON flashcards(user_id)"
-       ~oneshot:true)
+       unit)
     unit in
   let* () = Db.exec
     (exec
+       ~oneshot:true
        "CREATE INDEX IF NOT EXISTS idx_flashcards_next_review ON flashcards(next_review)"
-       ~oneshot:true)
+       unit)
     unit in
   Lwt.return_unit
 
