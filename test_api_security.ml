@@ -26,7 +26,15 @@ let setup_test_db () =
   | Error e -> Lwt.return (Error (Caqti_error.show e))
 
 let create_test_request ?(user_id=None) ~meth ~path () =
-  let request = Dream.request ~method:meth path in
+  (* Use a match to avoid method keyword issue when passing variable *)
+  let request = match meth with
+    | `GET -> Dream.request ~method:`GET path
+    | `POST -> Dream.request ~method:`POST path
+    | `PUT -> Dream.request ~method:`PUT path
+    | `DELETE -> Dream.request ~method:`DELETE path
+    | `PATCH -> Dream.request ~method:`PATCH path
+    | _ -> Dream.request ~method:`GET path
+  in
   match user_id with
   | Some uid -> 
     let _ = Dream.set_session request "user_id" (Int64.to_string uid) in
