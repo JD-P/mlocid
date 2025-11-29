@@ -1,5 +1,3 @@
-open Lwt.Syntax
-
 (* Simple password hashing using SHA256 *)
 let hash_password password =
   let digest = Digest.string password in
