@@ -157,7 +157,7 @@ let update_flashcard_handler db user_id request =
   match Int64.of_string_opt flashcard_id_str with
   | Some flashcard_id ->
     let* body = Dream.body request in
-    match Yojson.Safe.from_string body with
+    (match Yojson.Safe.from_string body with
     | exception _ -> error_response `Bad_Request "Invalid JSON"
     | json ->
       let* existing_result = DB.get_flashcard db flashcard_id user_id in
@@ -171,7 +171,7 @@ let update_flashcard_handler db user_id request =
         | Ok () -> success_response (`Null) |> Lwt.return
         | Error msg -> error_response `Internal_Server_Error msg)
       | Ok None -> error_response `Not_Found "Flashcard not found"
-      | Error msg -> error_response `Internal_Server_Error msg)
+      | Error msg -> error_response `Internal_Server_Error msg))
   | None -> error_response `Bad_Request "Invalid flashcard ID"
 
 let delete_flashcard_handler db user_id request =
@@ -207,11 +207,11 @@ let review_flashcard_handler db user_id request =
   match Int64.of_string_opt flashcard_id_str with
   | Some flashcard_id ->
     let* body = Dream.body request in
-    match Yojson.Safe.from_string body with
+    (match Yojson.Safe.from_string body with
     | exception _ -> error_response `Bad_Request "Invalid JSON"
     | json ->
       let quality_int = json |> member "quality" |> to_int_option in
-      match quality_int with
+      (match quality_int with
       | Some q when q >= 0 && q <= 5 ->
         let quality = SM2.int_to_quality q in
         let* existing_result = DB.get_flashcard db flashcard_id user_id in
@@ -243,7 +243,7 @@ let review_flashcard_handler db user_id request =
           | Error msg -> error_response `Internal_Server_Error msg)
         | Ok None -> error_response `Not_Found "Flashcard not found"
         | Error msg -> error_response `Internal_Server_Error msg)
-      | _ -> error_response `Bad_Request "Quality must be between 0 and 5"
+      | _ -> error_response `Bad_Request "Quality must be between 0 and 5"))
   | None -> error_response `Bad_Request "Invalid flashcard ID"
 
 let import_mnemosyne_handler db user_id request =
