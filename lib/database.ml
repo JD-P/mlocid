@@ -28,13 +28,7 @@ let collect ?oneshot row_type query_string arg_type =
 
 (* Connection module type - matches Caqti_lwt.CONNECTION interface *)
 (* We define it here to avoid needing Caqti_lwt module in library compilation *)
-module type CONNECTION = sig
-  type 'a future = 'a Lwt.t
-  val exec : ('a, 'b, 'c) Caqti_request.t -> 'a -> (unit, Caqti_error.t) result future
-  val find : ('a, 'b, 'c) Caqti_request.t -> 'a -> ('b option, Caqti_error.t) result future
-  val find_opt : ('a, 'b, 'c) Caqti_request.t -> 'a -> ('b option, Caqti_error.t) result future
-  val collect_list : ('a, 'b, 'c) Caqti_request.t -> 'a -> ('b list, Caqti_error.t) result future
-end
+module type CONNECTION = Caqti_lwt.CONNECTION
 
 type user = {
   id: int64;

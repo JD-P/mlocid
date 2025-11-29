@@ -2,5 +2,5 @@
  (name mlocid_lib)
  (public_name mlocid.lib)
  (wrapped false)
- (libraries dream dream-httpaf dream-pure yojson yaml caqti caqti-driver-sqlite3 lwt lwt_ppx)
+ (libraries dream dream-httpaf dream-pure yojson yaml caqti caqti-lwt caqti-driver-sqlite3 lwt lwt_ppx)
  (flags :standard -w -33))
