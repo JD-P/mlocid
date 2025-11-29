@@ -2,19 +2,19 @@
  (public_name mlocid)
  (name main)
  (modules main)
- (libraries mlocid_lib dream dream-httpaf dream-pure sqlite3 yojson yaml caqti caqti-lwt caqti-driver-sqlite3 lwt lwt_ppx logs fmt)
+ (libraries mlocid_lib dream dream-httpaf dream-pure sqlite3 yojson yaml caqti caqti-lwt caqti-lwt-unix caqti-driver-sqlite3 lwt lwt_ppx logs fmt)
  (preprocess (pps lwt_ppx ppx_yojson_conv)))
 
 (executables
  (names test_backend)
  (public_names test_backend)
  (modules test_backend)
- (libraries mlocid_lib dream dream-httpaf dream-pure sqlite3 yojson yaml caqti caqti-lwt caqti-driver-sqlite3 lwt lwt_ppx logs fmt ounit2)
+ (libraries mlocid_lib dream dream-httpaf dream-pure sqlite3 yojson yaml caqti caqti-lwt caqti-lwt-unix caqti-driver-sqlite3 lwt lwt_ppx logs fmt ounit2)
  (preprocess (pps lwt_ppx ppx_yojson_conv)))
 
 (executables
  (names test_api_security)
  (public_names test_api_security)
  (modules test_api_security)
- (libraries mlocid_lib dream dream-httpaf dream-pure sqlite3 yojson yaml caqti caqti-lwt caqti-driver-sqlite3 lwt lwt_ppx logs fmt ounit2)
+ (libraries mlocid_lib dream dream-httpaf dream-pure sqlite3 yojson yaml caqti caqti-lwt caqti-lwt-unix caqti-driver-sqlite3 lwt lwt_ppx logs fmt ounit2)
  (preprocess (pps lwt_ppx ppx_yojson_conv)))
