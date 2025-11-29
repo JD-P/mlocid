@@ -1,6 +1,6 @@
 open Lwt.Syntax
 open Dream
-open Caqti_lwt_unix
+open Caqti_lwt
 
 module DB = Database
 open Config
@@ -11,7 +11,7 @@ let () = Logs.Src.set_level logger (Some Logs.Info)
 
 let init_database (config : config) =
   let uri = Printf.sprintf "sqlite3:%s" config.database_path in
-  let* connection = Caqti_lwt_unix.connect (Uri.of_string uri) in
+  let* connection = connect uri in
   match connection with
   | Ok (module Db : DB.CONNECTION) ->
     let* () = DB.init_db (module Db) in
