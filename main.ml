@@ -10,7 +10,7 @@ let logger = Logs.Src.create "mlocid" ~doc:"Mlocid application"
 let () = Logs.Src.set_level logger (Some Logs.Info)
 
 let init_database config =
-  let uri = Printf.sprintf "sqlite3:%s" config.database_path in
+  let uri = Printf.sprintf "sqlite3:%s" (database_path config) in
   let* connection = Caqti_lwt_unix.connect (Uri.of_string uri) in
   match connection with
   | Ok (module Db : Caqti_lwt.CONNECTION) ->
@@ -62,13 +62,13 @@ let () =
   let* db_result = init_database config in
   match db_result with
   | Ok db ->
-    let app = Dream.logger @@
-              Dream.memory_sessions @@
-              router db in
-    let port = config.port in
-    let host = config.host in
-    Logs.info (fun m -> m "Starting mlocid server on %s:%d" host port);
-    Dream.run ~interface:host ~port:port app
+      let app = Dream.logger @@
+                Dream.memory_sessions @@
+                router db in
+      let port = port config in
+      let host = host config in
+      Logs.info (fun m -> m "Starting mlocid server on %s:%d" host port);
+      Dream.run ~interface:host ~port app
   | Error msg ->
-    Logs.err (fun m -> m "Failed to initialize database: %s" msg);
-    exit 1
+      Logs.err (fun m -> m "Failed to initialize database: %s" msg);
+      exit 1
