@@ -376,46 +376,54 @@ let test_users_only_see_their_own_due_flashcards _ =
     | Ok user1_id, Ok user2_id ->
       let now = Int64.of_float (Unix.time ()) in
       let past = Int64.sub now 86400L in
-      
+
       (* User1 creates a due card *)
       let* _ = create_flashcard db user1_id "User1 Due Q" "User1 Due A" in
       let* card1_result = get_flashcard db 1L user1_id in
-      (match card1_result with
-      | Ok (Some card1) ->
-        let due_card1 = { card1 with next_review = past } in
-        let* _ = update_flashcard db due_card1 in
-        Lwt.return_unit
-      | _ -> Lwt.return_unit) in
-      
+      let* () =
+        match card1_result with
+        | Ok (Some card1) ->
+          let due_card1 = { card1 with next_review = past } in
+          update_flashcard db due_card1
+        | _ ->
+          Lwt.return_unit
+      in
+
       (* User2 creates a due card *)
       let* _ = create_flashcard db user2_id "User2 Due Q" "User2 Due A" in
       let* card2_result = get_flashcard db 2L user2_id in
-      (match card2_result with
-      | Ok (Some card2) ->
-        let due_card2 = { card2 with next_review = past } in
-        let* _ = update_flashcard db due_card2 in
-        ()
-      | _ -> ());
-      
+      let* () =
+        match card2_result with
+        | Ok (Some card2) ->
+          let due_card2 = { card2 with next_review = past } in
+          update_flashcard db due_card2
+        | _ ->
+          Lwt.return_unit
+      in
+
       (* User1 should only see their own due card *)
       let* user1_due_result = get_due_flashcards db user1_id in
-      match user1_due_result with
-      | Ok user1_due ->
-        assert_equal 1 (List.length user1_due);
-        assert_bool "All due cards should belong to user1"
-          (List.for_all (fun c -> Int64.equal c.user_id user1_id) user1_due);
-        (* User2 should only see their own due card *)
-        let* user2_due_result = get_due_flashcards db user2_id in
-        match user2_due_result with
-        | Ok user2_due ->
-          assert_equal 1 (List.length user2_due);
-          assert_bool "All due cards should belong to user2"
-            (List.for_all (fun c -> Int64.equal c.user_id user2_id) user2_due);
-          Lwt.return_unit
-        | Error msg -> assert_failure ("Failed to get user2 due cards: " ^ msg)
-      | Error msg -> assert_failure ("Failed to get user1 due cards: " ^ msg)
-    | _ -> assert_failure "Failed to create users"
-  | Error msg -> assert_failure ("Failed to setup database: " ^ msg)
+      (match user1_due_result with
+       | Ok user1_due ->
+         assert_equal 1 (List.length user1_due);
+         assert_bool "All due cards should belong to user1"
+           (List_for_all (fun c -> Int64.equal c.user_id user1_id) user1_due);
+         (* User2 should only see their own due card *)
+         let* user2_due_result = get_due_flashcards db user2_id in
+         (match user2_due_result with
+          | Ok user2_due ->
+            assert_equal 1 (List.length user2_due);
+            assert_bool "All due cards should belong to user2"
+              (List.for_all (fun c -> Int64.equal c.user_id user2_id) user2_due);
+            Lwt.return_unit
+          | Error msg ->
+            assert_failure ("Failed to get user2 due cards: " ^ msg))
+       | Error msg ->
+         assert_failure ("Failed to get user1 due cards: " ^ msg))
+    | _ ->
+      assert_failure "Failed to create users"
+  | Error msg ->
+    assert_failure ("Failed to setup database: " ^ msg)
 
 let suite =
   "Database and SM2 Tests" >:::
