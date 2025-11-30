@@ -2,8 +2,10 @@ open Lwt.Syntax
 open Dream
 open Caqti_lwt
 
-module DB = Database
-module API = Api
+module DB = Mlocid_lib.Database
+module Config = Mlocid_lib.Config
+module API = Mlocid_lib.Api
+open Config
 
 let logger = Logs.Src.create "mlocid" ~doc:"Mlocid application"
 let () = Logs.Src.set_level logger (Some Logs.Info)
