@@ -57,7 +57,7 @@ let () =
     in
     find_config args
   in
-  let config : config = load_config_yaml config_path in
+  let config : Config.config = Config.load_config_yaml config_path in
   
   let* db_result = init_database config in
   match db_result with
