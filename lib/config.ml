@@ -83,3 +83,9 @@ let load_config_yaml path =
     { database_path; port; host; static_dir; session_secret }
   with
   | _ -> default_config
+
+let database_path (c : config) = c.database_path
+let port          (c : config) = c.port
+let host          (c : config) = c.host
+let static_dir    (c : config) = c.static_dir
+let session_secret (c : config) = c.session_secret
