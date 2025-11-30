@@ -401,29 +401,25 @@ let test_users_only_see_their_own_due_flashcards _ =
           Lwt.return_unit
       in
 
-      (* User1 should only see their own due card *)
-      let* user1_due_result = get_due_flashcards db user1_id in
-      (match user1_due_result with
-       | Ok user1_due ->
-         assert_equal 1 (List.length user1_due);
-         assert_bool "All due cards should belong to user1"
-           (List_for_all (fun c -> Int64.equal c.user_id user1_id) user1_due);
-         (* User2 should only see their own due card *)
-         let* user2_due_result = get_due_flashcards db user2_id in
-         (match user2_due_result with
-          | Ok user2_due ->
-            assert_equal 1 (List.length user2_due);
-            assert_bool "All due cards should belong to user2"
-              (List.for_all (fun c -> Int64.equal c.user_id user2_id) user2_due);
-            Lwt.return_unit
-          | Error msg ->
-            assert_failure ("Failed to get user2 due cards: " ^ msg))
-       | Error msg ->
-         assert_failure ("Failed to get user1 due cards: " ^ msg))
-    | _ ->
-      assert_failure "Failed to create users"
+(* User1 should only see their own due card *)
+let* user1_due_result = get_due_flashcards db user1_id in
+match user1_due_result with
+| Ok user1_due ->
+  assert_equal 1 (List.length user1_due);
+  assert_bool "All due cards should belong to user1"
+    (List.for_all (fun c -> Int64.equal c.user_id user1_id) user1_due);
+  let* user2_due_result = get_due_flashcards db user2_id in
+  match user2_due_result with
+  | Ok user2_due ->
+    assert_equal 1 (List.length user2_due);
+    assert_bool "All due cards should belong to user2"
+      (List.for_all (fun c -> Int64.equal c.user_id user2_id) user2_due);
+    Lwt.return_unit
   | Error msg ->
-    assert_failure ("Failed to setup database: " ^ msg)
+    assert_failure ("Failed to get user2 due cards: " ^ msg)
+| Error msg ->
+  assert_failure ("Failed to get user1 due cards: " ^ msg)
+
 
 let suite =
   "Database and SM2 Tests" >:::
